@@ -1,4 +1,5 @@
 // -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
+// Copyright: 2026 Jerzy Pawlowski
 
 #include "RcppArmadillo.h"
 #include <vector>
@@ -26,8 +27,8 @@ using namespace arma::newarp;
 //' Create a named list of model parameters that can be passed into regression
 //' and machine learning functions.
 //' 
-//' @param \code{method} A \emph{character string} specifying the type of
-//'   regression model (the default is \code{method = "least_squares"}).
+//' @param \code{regmod} A \emph{character string} specifying the type of
+//'   regression model (the default is \code{regmod = "least_squares"}).
 //'   
 //' @param \code{intercept} A \emph{Boolean} specifying whether an intercept
 //'   term should be added to the predictor (the default is \code{intercept =
@@ -42,10 +43,13 @@ using namespace arma::newarp;
 //'   predictor matrix (the default is \code{dimax = 0} - standard matrix
 //'   inverse using all the \emph{singular values}).
 //'   
+//' @param \code{residscale} A \emph{character string} specifying the scaling
+//'   method for the \emph{residuals} and the \emph{forecast errors}.
+//' 
 //' @param \code{confl} The confidence level for calculating the quantiles of
 //'   returns (the default is \code{confl = 0.75}).
 //'
-//' @param \code{alphac} The shrinkage intensity of \code{returns} (with values
+//' @param \code{alphac} The regularization intensity of \code{returns} (with values
 //'   between \code{0} and \code{1} - the default is \code{0}).
 //'   
 //' @return A named list of model parameters that can be passed into regression
@@ -54,11 +58,38 @@ using namespace arma::newarp;
 //' @details
 //'   The function \code{param_reg()} creates a named list of model parameters
 //'   that can be passed into regression and machine learning functions.  For
-//'   example into the functions \code{calc_reg()} and \code{roll_reg()}.
+//'   example into the functions \code{calc_reg()}, \code{roll_reg()}, and
+//'   run_reg().
 //'   
 //'   The function \code{param_reg()} simplifies the creation of regression
 //'   parameter lists.  The users can create a parameter list with the default
 //'   values, or they can specify custom parameter values.
+//'   
+//'   Depending on the parameter \code{residscale}, the \emph{residuals} and the
+//'   \emph{forecast errors} may be scaled by their volatilities to obtain the
+//'   \emph{z-scores}.
+//'   The default is \code{residscale = "none"} - no scaling.
+//'   If the argument \code{residscale = "scale"} then the \emph{residuals} are
+//'   divided by their volatilities without subtracting their means.
+//'   If the argument \code{residscale = "standardize"} then the residual means
+//'   are subtracted from the \emph{residuals}, and then they are divided by
+//'   their volatilities.
+//' 
+//'   If \code{regmod = "least_squares"} (the default) then it performs the
+//'   standard least squares regression, the same as the function
+//'   \code{calc_lm()}, and the function \code{lm()} from the \code{R} package
+//'   \emph{stats}.
+//'   But it uses \code{RcppArmadillo} \code{C++} code so it's several times
+//'   faster than \code{lm()}.
+//'
+//'   If \code{regmod = "regular"} then it performs regularized regression.  It
+//'   calculates the \emph{reduced inverse} of the predictor matrix from its
+//'   singular value decomposition.  It performs regularization by selecting
+//'   only the largest \emph{singular values} equal in number to \code{dimax}.
+//'   
+//'   If \code{regmod = "quantile"} then it performs quantile regression (not
+//'   implemented yet).
+//' 
 //'
 //' @examples
 //' \dontrun{
@@ -78,7 +109,7 @@ Rcpp::List param_reg(std::string regmod = "least_squares",  // Type of regressio
                      arma::uword dimax = 0, // Number of eigen vectors for dimension reduction
                      std::string residscale = "none",  // Method for scaling the residuals
                      double confl = 0.1, // Confidence level for calculating the quantiles of returns
-                     double alphac = 0.0) {  // Shrinkage intensity of returns
+                     double alphac = 0.0) {  // Regularization intensity of returns
   
   Rcpp::List controll = Rcpp::List::create(Rcpp::Named("regmod") = regmod,
                                            Rcpp::Named("intercept") = intercept,
@@ -110,6 +141,11 @@ Rcpp::List param_reg(std::string regmod = "least_squares",  // Type of regressio
 //'   \code{covariance matrix} of \code{returns} matrix (the default is
 //'   \code{dimax = 0} - standard matrix inverse using all the \emph{singular
 //'   values}).
+//'   
+//' @param \code{lagg} An \emph{integer} equal to the number of \emph{periods} 
+//'   used to lag the calibration interval relative to the test interval.  
+//'   The default is \code{lagg = 1}, which means the calibration interval ends
+//'   just before the test interval starts.
 //'   
 //' @param \code{confl} The confidence level for calculating the quantiles of
 //'   returns (the default is \code{confl = 0.75}).
@@ -158,6 +194,7 @@ Rcpp::List param_reg(std::string regmod = "least_squares",  // Type of regressio
 Rcpp::List param_portf(std::string method = "sharpem",  // Type of portfolio optimization model
                        double singmin = 1e-5, // Threshold level for discarding small singular values
                        arma::uword dimax = 0, // Number of eigen vectors for dimension reduction
+                       arma::uword lagg = 1, // Lag of the calibration interval relative to the test interval
                        double confl = 0.1, // Confidence level for calculating the quantiles of returns
                        double alphac = 0.0, // Shrinkage intensity of returns
                        bool rankw = false, // Should the weights be ranked?
@@ -168,6 +205,7 @@ Rcpp::List param_portf(std::string method = "sharpem",  // Type of portfolio opt
   Rcpp::List controll = Rcpp::List::create(Rcpp::Named("method") = method,
                                            Rcpp::Named("singmin") = singmin,
                                            Rcpp::Named("dimax") = dimax,
+                                           Rcpp::Named("lagg") = lagg,
                                            Rcpp::Named("confl") = confl,
                                            Rcpp::Named("alphac") = alphac,
                                            Rcpp::Named("rankw") = rankw,
@@ -3069,8 +3107,8 @@ arma::mat run_min(const arma::mat& timeser, double lambdaf) {
 
 
 ////////////////////////////////////////////////////////////
-//' Calculate the trailing mean and variance of streaming \emph{time series} of
-//' data using an online recursive formula.
+//' Calculate the exponential moving average mean and variance of streaming
+//' \emph{time series} data using an online recursive formula.
 //' 
 //' @param \code{timeser} A \emph{time series} or a \emph{matrix} of data.
 //' 
@@ -3081,11 +3119,11 @@ arma::mat run_min(const arma::mat& timeser, double lambdaf) {
 //'   means and the second contains the variance.
 //'
 //' @details
-//'   The function \code{run_var()} calculates the trailing mean and variance
-//'   of streaming \emph{time series} of data \eqn{r_t}, by recursively
-//'   weighting the past variance estimates \eqn{\sigma^2_{t-1}}, with the
-//'   squared differences of the data minus its trailing means \eqn{(r_t -
-//'   \bar{r}_t)^2}, using the decay factor \eqn{\lambda^2}:
+//'   The function \code{run_var()} calculates the exponential moving average
+//'   mean and variance of streaming \emph{time series} data \eqn{r_t}, by
+//'   recursively weighting the past variance estimates \eqn{\sigma^2_{t-1}},
+//'   with the squared differences of the data minus its EMA means 
+//'   \eqn{(r_t - \bar{r}_t)^2}, using the decay factor \eqn{\lambda^2}:
 //'   \deqn{
 //'     \bar{r}_t = \lambda \bar{r}_{t-1} + (1 - \lambda) r_t
 //'   }
@@ -3407,7 +3445,7 @@ arma::mat run_var_ohlc(const arma::mat& ohlc,
   vars.row(0) = arma::square(opcl.row(0)) + coeff*arma::square(clop.row(0)) +
     (coeff-1)*(clhi.row(0)*hiop.row(0) + cllow.row(0)*lowop.row(0));
   for (arma::uword it = 1; it < nrows; it++) {
-    // Calculate the variance as the weighted sum of squared returns minus the squared means
+    // Calculate the variance using the Yang-Zhang estimator and the decay factor
     vars.row(it) = lambda1*(arma::square(opcl.row(it)) + coeff*arma::square(clop.row(it)) +
       (coeff-1)*(clhi.row(it)*hiop.row(it) + cllow.row(it)*lowop.row(it))) + lambdaf*vars.row(it-1);
   }  // end for
@@ -3461,7 +3499,7 @@ void push_cov2cor(arma::mat& covmat) {
 //' Update the trailing covariance matrix of streaming asset returns,
 //' with a row of new returns using an online recursive formula.
 //' 
-//' @param \code{retsn} A \emph{vector} of new asset returns.
+//' @param \code{retn} A \emph{vector} of new asset returns.
 //' 
 //' @param \code{covmat} A trailing covariance \emph{matrix} of asset returns.
 //' 
@@ -3478,8 +3516,8 @@ void push_cov2cor(arma::mat& covmat) {
 //'   covariance matrix in place, without copying the data in memory.
 //'   
 //'   The streaming asset returns \eqn{r_t} contain multiple columns and the
-//'   parameter \code{retsn} represents a single row of \eqn{r_t} - the asset
-//'   returns at time \eqn{t}.  The elements of the vectors \code{retsn} and 
+//'   parameter \code{retn} represents a single row of \eqn{r_t} - the asset
+//'   returns at time \eqn{t}.  The elements of the vectors \code{retn} and 
 //'   \code{meanv} represent single rows of data with multiple columns.
 //'   
 //'   The function \code{push_covar()} accepts \emph{pointers} to the arguments
@@ -3528,12 +3566,12 @@ void push_cov2cor(arma::mat& covmat) {
 //' meanv <- colMeans(retss)
 //' covmat <- cov(retss)
 //' # Update the covariance of returns
-//' HighFreq::push_covar(retsn=retp[nrows], covmat=covmat, meanv=meanv, lambdacov=0.9)
+//' HighFreq::push_covar(retn=retp[nrows], covmat=covmat, meanv=meanv, lambdacov=0.9)
 //' }  # end dontrun
 //' 
 //' @export
 // [[Rcpp::export]]
-void push_covar(const arma::rowvec& retsn, // Row of new asset returns
+void push_covar(const arma::rowvec& retn, // Row of new asset returns
                 arma::mat& covmat,  // Covariance matrix
                 arma::rowvec& meanv, // Trailing means of the returns
                 const double& lambdacov) { // Covariance decay factor
@@ -3541,9 +3579,9 @@ void push_covar(const arma::rowvec& retsn, // Row of new asset returns
   double lambda1 = 1-lambdacov;
   
   // Update the means of the returns
-  meanv = lambdacov*meanv + lambda1*retsn;
+  meanv = lambdacov*meanv + lambda1*retn;
   // Calculate the centered returns
-  arma::rowvec datav = (retsn - meanv);
+  arma::rowvec datav = (retn - meanv);
   
   // Update the covariance of the returns
   covmat = lambdacov*covmat + lambda1*arma::trans(datav)*datav;
@@ -3556,7 +3594,7 @@ void push_covar(const arma::rowvec& retsn, // Row of new asset returns
 //' Update the trailing eigen values and eigen vectors of streaming asset return
 //' data, with a row of new returns.
 //' 
-//' @param \code{retsn} A \emph{vector} of new asset returns.
+//' @param \code{retn} A \emph{vector} of new asset returns.
 //' 
 //' @param \code{covmat} A trailing covariance \emph{matrix} of asset returns.
 //' 
@@ -3580,8 +3618,8 @@ void push_covar(const arma::rowvec& retsn, // Row of new asset returns
 //'   the data in memory.
 //'   
 //'   The streaming asset returns \eqn{r_t} contain multiple columns and the
-//'   parameter \code{retsn} represents a single row of \eqn{r_t} - the asset
-//'   returns at time \eqn{t}.  The elements of the vectors \code{retsn},
+//'   parameter \code{retn} represents a single row of \eqn{r_t} - the asset
+//'   returns at time \eqn{t}.  The elements of the vectors \code{retn},
 //'   \code{eigenret}, and \code{meanv} represent single rows of data with
 //'   multiple columns.
 //'   
@@ -3635,14 +3673,14 @@ void push_covar(const arma::rowvec& retsn, // Row of new asset returns
 //' covmat <- cov(retss)
 //' # Update the covariance of returns
 //' eigenret <- numeric(NCOL(retp))
-//' HighFreq::push_eigen(retsn=retp[nrows], covmat=covmat, 
+//' HighFreq::push_eigen(retn=retp[nrows], covmat=covmat, 
 //'   eigenval=eigenval, eigenvec=eigenvec, 
 //'   eigenret=eigenret, meanv=meanv, lambdacov=0.9)
 //' }  # end dontrun
 //' 
 //' @export
 // [[Rcpp::export]]
-void push_eigen(const arma::rowvec& retsn, // Row of new asset returns
+void push_eigen(const arma::rowvec& retn, // Row of new asset returns
                 arma::mat& covmat,  // Covariance matrix
                 arma::vec& eigenval, // Eigen values
                 arma::mat& eigenvec, // Eigen vectors
@@ -3653,7 +3691,7 @@ void push_eigen(const arma::rowvec& retsn, // Row of new asset returns
   // Scale the returns by their volatility
   arma::rowvec varv = arma::trans(covmat.diag());
   varv.replace(0, 1);
-  arma::rowvec retsc = retsn/arma::sqrt(varv);
+  arma::rowvec retsc = retn/arma::sqrt(varv);
   // Calculate the eigen portfolio returns - the products of the previous eigen vectors times the scaled returns
   eigenret = retsc*eigenvec;
   // Update the covariance matrix
@@ -3669,7 +3707,7 @@ void push_eigen(const arma::rowvec& retsn, // Row of new asset returns
 //' Update the trailing eigen values and eigen vectors of streaming asset return
 //' data, with a row of new returns, using the \emph{SGA} algorithm.
 //' 
-//' @param \code{retsn} A \emph{vector} of new asset returns.
+//' @param \code{retn} A \emph{vector} of new asset returns.
 //' 
 //' @param \code{eigenval} A \emph{vector} of eigen values.
 //' 
@@ -3697,8 +3735,8 @@ void push_eigen(const arma::rowvec& retsn, // Row of new asset returns
 //'   eigenelements in place, without copying the data in memory.
 //'   
 //'   The streaming asset returns \eqn{r_t} contain multiple columns and the
-//'   parameter \code{retsn} represents a single row of \eqn{r_t} - the asset
-//'   returns at time \eqn{t}.  The elements of the vectors \code{retsn},
+//'   parameter \code{retn} represents a single row of \eqn{r_t} - the asset
+//'   returns at time \eqn{t}.  The elements of the vectors \code{retn},
 //'   \code{meanv}, and \code{varv} represent single rows of data with multiple
 //'   columns.
 //'   
@@ -3789,14 +3827,14 @@ void push_eigen(const arma::rowvec& retsn, // Row of new asset returns
 //' HighFreq::calc_eigen(covmat, eigenval, eigenvec)
 //' # Update the eigen decomposition using SGA
 //' eigenret <- numeric(NCOL(retp))
-//' HighFreq::push_sga(retsn=retp[nrows], 
+//' HighFreq::push_sga(retn=retp[nrows], 
 //'   eigenval=eigenval, eigenvec=eigenvec, 
 //'   eigenret=eigenret, meanv=meanv, varv=varv, lambdaf=0.9, gamma=0.1)
 //' }  # end dontrun
 //' 
 //' @export
 // [[Rcpp::export]]
-void push_sga(const arma::rowvec& retsn, // Row of new asset returns
+void push_sga(const arma::rowvec& retn, // Row of new asset returns
               arma::rowvec& eigenval, // Eigen values
               arma::mat& eigenvec, // Eigen vectors
               arma::rowvec& eigenret, // Row of eigen portfolio returns
@@ -3809,15 +3847,15 @@ void push_sga(const arma::rowvec& retsn, // Row of new asset returns
   
   // Calculate the eigen portfolio returns - the products of the previous eigen vectors times the scaled returns
   arma::rowvec volv = arma::sqrt(varv);
-  eigenret = (retsn/volv)*eigenvec;
+  eigenret = (retn/volv)*eigenvec;
   
   // Update the mean and variance of the returns
-  meanv = lambdaf*meanv + lambda1*retsn;
-  varv = lambdaf*varv + lambda1*arma::square(retsn-meanv);
+  meanv = lambdaf*meanv + lambda1*retn;
+  varv = lambdaf*varv + lambda1*arma::square(retn-meanv);
   // Calculate the standardized returns
   volv = arma::sqrt(varv);
-  arma::rowvec datav = (retsn-meanv)/volv;
-  // arma::rowvec datav = (retsn-meanv);
+  arma::rowvec datav = (retn-meanv)/volv;
+  // arma::rowvec datav = (retn-meanv);
   // std::cout << "datav: " << std::endl << datav << std::endl;
   // std::cout << "arma::trans(datav): " << std::endl << arma::trans(datav) << std::endl;
   
@@ -4228,7 +4266,8 @@ arma::mat run_autocovar(const arma::mat& timeser,
 //'   regression coefficient is equal to the alpha value \eqn{\alpha}.
 //'
 //'   If \code{regmod = "least_squares"} (the default) then it performs the
-//'   standard least squares regression.  This is currently the only option.
+//'   standard least squares regression.  This is the only option for
+//'   \code{run_reg()}.
 //' 
 //'   The \emph{residuals} and the the \emph{forecast errors} may be scaled by
 //'   their volatilities to obtain the \emph{z-scores}. 
@@ -5052,7 +5091,7 @@ arma::mat calc_var_ag(const arma::mat& pricev,
 // [[Rcpp::export]]
 double calc_var_ohlc(const arma::mat& ohlc, 
                      std::string method = "yang_zhang", 
-                     arma::colvec closel = 0, 
+                     arma::colvec closel = 0, // Lagged close prices
                      bool scalit = true, // Divide the returns by time index
                      arma::colvec index = 0) {
   
@@ -5077,6 +5116,7 @@ double calc_var_ohlc(const arma::mat& ohlc,
   arma::mat lowp = ohlc.col(2);
   arma::mat closep = ohlc.col(3);
   arma::mat opcl = arma::zeros(nrows, 1);
+  // Calculate the lagged close prices
   if (closel.n_rows == 1) {
     closel = arma::join_cols(closep.row(0), closep.rows(0, nrows-2));
     opcl = (openp - closel)/index;
@@ -5800,7 +5840,7 @@ Rcpp::List calc_lm(const arma::vec& respv,  // Response vector
 //'   But it uses \code{RcppArmadillo} \code{C++} code so it's several times
 //'   faster than \code{lm()}.
 //'
-//'   If \code{regmod = "regular"} then it performs shrinkage regression.  It
+//'   If \code{regmod = "regular"} then it performs regularized regression.  It
 //'   calculates the \emph{reduced inverse} of the predictor matrix from its
 //'   singular value decomposition.  It performs regularization by selecting
 //'   only the largest \emph{singular values} equal in number to \code{dimax}.
@@ -5891,7 +5931,7 @@ arma::mat calc_reg(const arma::mat& respv,  // Response vector
     break;
   }  // end least_squares
   case methodenum::regular: {
-    // Calculate shrinkage regression coefficients
+    // Calculate regularized regression coefficients
     coeff = calc_inv(predm, dimax, singmin)*respv;
     break;
   }  // end regular
@@ -8133,7 +8173,7 @@ double lik_garch(double omegac,
 //' @param \code{lambdaw} A decay factor which multiplies the past portfolio
 //'   weights.
 //'   
-//' @return A \emph{matrix} of strategy returns and the portfolio weights, with
+//' @return A \emph{matrix} of strategy PnLs and the portfolio weights, with
 //'   the same number of rows as the argument \code{rets}.
 //'   
 //' @details
@@ -8227,7 +8267,7 @@ double lik_garch(double omegac,
 //' 
 //'   The function \code{sim_portfoptim()} returns multiple columns of data,
 //'   with the same number of rows as the input argument \code{rets}. The first
-//'   column contains the strategy returns and the remaining columns contain the
+//'   column contains the strategy PnLs and the remaining columns contain the
 //'   portfolio weights.
 //'   
 //' @examples
@@ -8248,7 +8288,7 @@ double lik_garch(double omegac,
 //' wealthv <- cbind(retp$VTI, pnls$pnls*sd(retp$VTI)/sd(pnls$pnls))
 //' colnames(wealthv) <- c("VTI", "Strategy")
 //' endd <- rutils::calc_endpoints(wealthv, interval="weeks")
-//' dygraphs::dygraph(cumsum(wealthv)[endd], main="Portfolio Optimization Strategy Returns") %>%
+//' dygraphs::dygraph(cumsum(wealthv)[endd], main="Portfolio Optimization Strategy PnLs") %>%
 //'  dyOptions(colors=c("blue", "red"), strokeWidth=2) %>%
 //'  dyLegend(width=300)
 //' # Plot dygraph of weights
@@ -8279,7 +8319,7 @@ arma::mat sim_portfoptim(const arma::mat& rets, // Asset returns
   arma::rowvec varv; // Variance of asset returns
   arma::mat invmat(ncols, ncols, fill::ones); // Inverse covariance matrix
   arma::mat weightv(nrows, ncols, fill::zeros); // Portfolio weights
-  arma::colvec stratret(nrows, fill::zeros); // Strategy returns
+  arma::colvec pnls(nrows, fill::zeros); // Strategy PnLs
   double weightd; // Sum of squared weights
   double lambda1 = 1-lambdaf;
   double lambdaw1 = 1-lambdaw;
@@ -8295,8 +8335,8 @@ arma::mat sim_portfoptim(const arma::mat& rets, // Asset returns
     varv = arma::trans(covmat.diag());
     varv.replace(0, 1);
     retsc = rets.row(it)/arma::sqrt(varv);
-    // Calculate the strategy returns - the products of the lagged weights times the asset returns
-    stratret(it) = arma::dot(retsc, weightv.row(it-1));
+    // Calculate the strategy PnLs - the products of the lagged weights times the asset returns
+    pnls(it) = arma::dot(retsc, weightv.row(it-1));
     // Update the covariance matrix with new row of asset returns
     // if (scalit) {
     push_covar(retsc, covmat, meanv, lambdacov);
@@ -8317,8 +8357,8 @@ arma::mat sim_portfoptim(const arma::mat& rets, // Asset returns
     weightv.row(it) = weightv.row(it)/weightd;
   }  // end for
   
-  // Return the strategy returns and the portfolio weights
-  return arma::join_rows(stratret, weightv);
+  // Return the strategy PnLs and the portfolio weights
+  return arma::join_rows(pnls, weightv);
   
 }  // end sim_portfoptim
 
@@ -8625,7 +8665,7 @@ arma::vec calc_weights(const arma::mat& returns, // Asset returns
 
 
 ////////////////////////////////////////////////////////////
-//' Simulate (backtest) a rolling portfolio optimization strategy, using
+//' Simulate (backtest) a portfolio momentum strategy, using
 //' \code{RcppArmadillo}.
 //' 
 //' @param \code{retp} A \emph{time series} or a \emph{matrix} of asset
@@ -8651,17 +8691,30 @@ arma::vec calc_weights(const arma::mat& returns, // Asset returns
 //'   \code{0})
 //'   
 //'   
-//' @return A column \emph{vector} of strategy returns, with the same length as
+//' @return A column \emph{vector} of strategy PnLs, with the same length as
 //'   the number of rows of \code{retp}.
 //'
 //' @details
 //'   The function \code{roll_portf()} performs a backtest simulation of a
-//'   rolling portfolio optimization strategy over a \emph{vector} of the end
+//'   portfolio momentum strategy over a \emph{vector} of the end
 //'   points \code{endd}.
 //'   
 //'   It performs a loop over the end points \code{endd}, and subsets the
 //'   \emph{matrix} of the excess asset returns \code{retx} along its rows,
 //'   between the corresponding \emph{start point} and the \emph{end point}. 
+//'   
+//'   The \emph{start} and \emph{end} points determine the \emph{in-sample}
+//'   calibration interval.  The \emph{lagg} parameter (from the list controll)
+//'   lags the \emph{start} and \emph{end} points.  The default is \code{lagg =
+//'   1}, which means that the calibration interval ends just before the
+//'   \emph{out-of-sample} test interval starts.
+//'   If \code{lagg=2}, then the calibration interval ends one period before the
+//'   test interval starts.  
+//'   If the \emph{end point} periods are weekly, then the calibration interval
+//'   ends one week before the test interval starts, and the most recent week is
+//'   excluded from the calibration interval. This improves the momentum
+//'   strategy performance, because prices from the most recent week tend to
+//'   revert.
 //'   
 //'   The function \code{roll_portf()} passes the subset matrix of excess
 //'   returns into the function \code{calc_weights()}, which calculates the
@@ -8696,10 +8749,10 @@ arma::vec calc_weights(const arma::mat& returns, // Asset returns
 //'   multiplying the bid-ask spread \code{bidask} times the absolute
 //'   difference between the current weights minus the weights from the previous
 //'   period. Then it subtracts the transaction costs from the out-of-sample
-//'   strategy returns.
+//'   strategy PnLs.
 //'   
 //'   The function \code{roll_portf()} returns a \emph{time series} (column
-//'   \emph{vector}) of strategy returns, of the same length as the number of
+//'   \emph{vector}) of strategy PnLs, of the same length as the number of
 //'   rows of \code{retp}.
 //'
 //' @examples
@@ -8721,7 +8774,7 @@ arma::vec calc_weights(const arma::mat& returns, // Asset returns
 //' dimax <- 3
 //' # Create a list of portfolio optimization parameters
 //' controll <- HighFreq::param_portf(method="maxsharpe", dimax=dimax, alphac=alphac, scalew="sumsq")
-//' # Simulate a monthly rolling portfolio optimization strategy
+//' # Simulate a monthly portfolio momentum strategy
 //' pnls <- HighFreq::roll_portf(retx, retp, controll=controll, startp=(startp-1), endd=(endd-1))
 //' pnls <- xts::xts(pnls, index(retp))
 //' colnames(pnls) <- "strategy"
@@ -8738,7 +8791,7 @@ arma::mat roll_portf(const arma::mat& retx, // Asset excess returns
                     arma::uvec startp, // Start points
                     arma::uvec endd, // End points
                     double lambdaf = 0.0, // Decay factor for averaging the portfolio weights
-                    double coeff = 1.0, // Multiplier of strategy returns
+                    double coeff = 1.0, // Multiplier of strategy PnLs
                     double bidask = 0.0) { // The bid-ask spread
   
   double lambda1 = 1-lambdaf;
@@ -8747,11 +8800,15 @@ arma::mat roll_portf(const arma::mat& retx, // Asset excess returns
   arma::vec weightp = arma::ones(nweights)/std::sqrt(nweights); // Past weights
   arma::mat pnls = arma::zeros(retp.n_rows, 1);
 
+  // Unpack the control list of portfolio optimization parameters
+  // Lag of the calibration interval
+  arma::uword lagg = Rcpp::as<int>(controll["lagg"]);
+  
   // Perform loop over the end points
-  for (arma::uword it = 1; it < endd.size(); it++) {
+  for (arma::uword it = lagg; it < endd.size(); it++) {
     // cout << "it: " << it << endl;
     // Calculate the portfolio weights
-    weightv = coeff*calc_weights(retx.rows(startp(it-1), endd(it-1)), controll);
+    weightv = coeff*calc_weights(retx.rows(startp(it-lagg), endd(it-lagg)), controll);
     // cout << "calc_weights done" << endl;
     // Calculate the weights as the weighted sum with past weights
     weightv = lambda1*weightv + lambdaf*weightp;

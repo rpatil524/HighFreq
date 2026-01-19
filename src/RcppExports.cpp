@@ -29,21 +29,22 @@ BEGIN_RCPP
 END_RCPP
 }
 // param_portf
-Rcpp::List param_portf(std::string method, double singmin, arma::uword dimax, double confl, double alphac, bool rankw, bool centerw, std::string scalew, double voltarget);
-RcppExport SEXP _HighFreq_param_portf(SEXP methodSEXP, SEXP singminSEXP, SEXP dimaxSEXP, SEXP conflSEXP, SEXP alphacSEXP, SEXP rankwSEXP, SEXP centerwSEXP, SEXP scalewSEXP, SEXP voltargetSEXP) {
+Rcpp::List param_portf(std::string method, double singmin, arma::uword dimax, arma::uword lagg, double confl, double alphac, bool rankw, bool centerw, std::string scalew, double voltarget);
+RcppExport SEXP _HighFreq_param_portf(SEXP methodSEXP, SEXP singminSEXP, SEXP dimaxSEXP, SEXP laggSEXP, SEXP conflSEXP, SEXP alphacSEXP, SEXP rankwSEXP, SEXP centerwSEXP, SEXP scalewSEXP, SEXP voltargetSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< std::string >::type method(methodSEXP);
     Rcpp::traits::input_parameter< double >::type singmin(singminSEXP);
     Rcpp::traits::input_parameter< arma::uword >::type dimax(dimaxSEXP);
+    Rcpp::traits::input_parameter< arma::uword >::type lagg(laggSEXP);
     Rcpp::traits::input_parameter< double >::type confl(conflSEXP);
     Rcpp::traits::input_parameter< double >::type alphac(alphacSEXP);
     Rcpp::traits::input_parameter< bool >::type rankw(rankwSEXP);
     Rcpp::traits::input_parameter< bool >::type centerw(centerwSEXP);
     Rcpp::traits::input_parameter< std::string >::type scalew(scalewSEXP);
     Rcpp::traits::input_parameter< double >::type voltarget(voltargetSEXP);
-    rcpp_result_gen = Rcpp::wrap(param_portf(method, singmin, dimax, confl, alphac, rankw, centerw, scalew, voltarget));
+    rcpp_result_gen = Rcpp::wrap(param_portf(method, singmin, dimax, lagg, confl, alphac, rankw, centerw, scalew, voltarget));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1038,7 +1039,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_HighFreq_param_reg", (DL_FUNC) &_HighFreq_param_reg, 7},
-    {"_HighFreq_param_portf", (DL_FUNC) &_HighFreq_param_portf, 9},
+    {"_HighFreq_param_portf", (DL_FUNC) &_HighFreq_param_portf, 10},
     {"_HighFreq_lag_vec", (DL_FUNC) &_HighFreq_lag_vec, 3},
     {"_HighFreq_lagit", (DL_FUNC) &_HighFreq_lagit, 3},
     {"_HighFreq_diff_vec", (DL_FUNC) &_HighFreq_diff_vec, 3},

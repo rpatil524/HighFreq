@@ -35,8 +35,8 @@ NULL
 #' Create a named list of model parameters that can be passed into regression
 #' and machine learning functions.
 #' 
-#' @param \code{method} A \emph{character string} specifying the type of
-#'   regression model (the default is \code{method = "least_squares"}).
+#' @param \code{regmod} A \emph{character string} specifying the type of
+#'   regression model (the default is \code{regmod = "least_squares"}).
 #'   
 #' @param \code{intercept} A \emph{Boolean} specifying whether an intercept
 #'   term should be added to the predictor (the default is \code{intercept =
@@ -51,10 +51,13 @@ NULL
 #'   predictor matrix (the default is \code{dimax = 0} - standard matrix
 #'   inverse using all the \emph{singular values}).
 #'   
+#' @param \code{residscale} A \emph{character string} specifying the scaling
+#'   method for the \emph{residuals} and the \emph{forecast errors}.
+#' 
 #' @param \code{confl} The confidence level for calculating the quantiles of
 #'   returns (the default is \code{confl = 0.75}).
 #'
-#' @param \code{alphac} The shrinkage intensity of \code{returns} (with values
+#' @param \code{alphac} The regularization intensity of \code{returns} (with values
 #'   between \code{0} and \code{1} - the default is \code{0}).
 #'   
 #' @return A named list of model parameters that can be passed into regression
@@ -63,11 +66,38 @@ NULL
 #' @details
 #'   The function \code{param_reg()} creates a named list of model parameters
 #'   that can be passed into regression and machine learning functions.  For
-#'   example into the functions \code{calc_reg()} and \code{roll_reg()}.
+#'   example into the functions \code{calc_reg()}, \code{roll_reg()}, and
+#'   run_reg().
 #'   
 #'   The function \code{param_reg()} simplifies the creation of regression
 #'   parameter lists.  The users can create a parameter list with the default
 #'   values, or they can specify custom parameter values.
+#'   
+#'   Depending on the parameter \code{residscale}, the \emph{residuals} and the
+#'   \emph{forecast errors} may be scaled by their volatilities to obtain the
+#'   \emph{z-scores}.
+#'   The default is \code{residscale = "none"} - no scaling.
+#'   If the argument \code{residscale = "scale"} then the \emph{residuals} are
+#'   divided by their volatilities without subtracting their means.
+#'   If the argument \code{residscale = "standardize"} then the residual means
+#'   are subtracted from the \emph{residuals}, and then they are divided by
+#'   their volatilities.
+#' 
+#'   If \code{regmod = "least_squares"} (the default) then it performs the
+#'   standard least squares regression, the same as the function
+#'   \code{calc_lm()}, and the function \code{lm()} from the \code{R} package
+#'   \emph{stats}.
+#'   But it uses \code{RcppArmadillo} \code{C++} code so it's several times
+#'   faster than \code{lm()}.
+#'
+#'   If \code{regmod = "regular"} then it performs regularized regression.  It
+#'   calculates the \emph{reduced inverse} of the predictor matrix from its
+#'   singular value decomposition.  It performs regularization by selecting
+#'   only the largest \emph{singular values} equal in number to \code{dimax}.
+#'   
+#'   If \code{regmod = "quantile"} then it performs quantile regression (not
+#'   implemented yet).
+#' 
 #'
 #' @examples
 #' \dontrun{
@@ -144,8 +174,8 @@ param_reg <- function(regmod = "least_squares", intercept = TRUE, singmin = 1e-5
 #' }  # end dontrun
 #' 
 #' @export
-param_portf <- function(method = "sharpem", singmin = 1e-5, dimax = 0L, confl = 0.1, alphac = 0.0, rankw = FALSE, centerw = FALSE, scalew = "voltarget", voltarget = 0.01) {
-    .Call(`_HighFreq_param_portf`, method, singmin, dimax, confl, alphac, rankw, centerw, scalew, voltarget)
+param_portf <- function(method = "sharpem", singmin = 1e-5, dimax = 0L, lagg = 1L, confl = 0.1, alphac = 0.0, rankw = FALSE, centerw = FALSE, scalew = "voltarget", voltarget = 0.01) {
+    .Call(`_HighFreq_param_portf`, method, singmin, dimax, lagg, confl, alphac, rankw, centerw, scalew, voltarget)
 }
 
 #' Apply a lag to a single-column \emph{time series} or a \emph{vector} 
@@ -2057,8 +2087,8 @@ run_min <- function(timeser, lambdaf) {
     .Call(`_HighFreq_run_min`, timeser, lambdaf)
 }
 
-#' Calculate the trailing mean and variance of streaming \emph{time series} of
-#' data using an online recursive formula.
+#' Calculate the exponential moving average mean and variance of streaming
+#' \emph{time series} data using an online recursive formula.
 #' 
 #' @param \code{timeser} A \emph{time series} or a \emph{matrix} of data.
 #' 
@@ -2069,11 +2099,11 @@ run_min <- function(timeser, lambdaf) {
 #'   means and the second contains the variance.
 #'
 #' @details
-#'   The function \code{run_var()} calculates the trailing mean and variance
-#'   of streaming \emph{time series} of data \eqn{r_t}, by recursively
-#'   weighting the past variance estimates \eqn{\sigma^2_{t-1}}, with the
-#'   squared differences of the data minus its trailing means \eqn{(r_t -
-#'   \bar{r}_t)^2}, using the decay factor \eqn{\lambda^2}:
+#'   The function \code{run_var()} calculates the exponential moving average
+#'   mean and variance of streaming \emph{time series} data \eqn{r_t}, by
+#'   recursively weighting the past variance estimates \eqn{\sigma^2_{t-1}},
+#'   with the squared differences of the data minus its EMA means 
+#'   \eqn{(r_t - \bar{r}_t)^2}, using the decay factor \eqn{\lambda^2}:
 #'   \deqn{
 #'     \bar{r}_t = \lambda \bar{r}_{t-1} + (1 - \lambda) r_t
 #'   }
@@ -2905,7 +2935,8 @@ run_autocovar <- function(timeser, lambdaf, lagg = 1L) {
 #'   regression coefficient is equal to the alpha value \eqn{\alpha}.
 #'
 #'   If \code{regmod = "least_squares"} (the default) then it performs the
-#'   standard least squares regression.  This is currently the only option.
+#'   standard least squares regression.  This is the only option for
+#'   \code{run_reg()}.
 #' 
 #'   The \emph{residuals} and the the \emph{forecast errors} may be scaled by
 #'   their volatilities to obtain the \emph{z-scores}. 
@@ -3939,7 +3970,7 @@ calc_lm <- function(respv, predm) {
 #'   But it uses \code{RcppArmadillo} \code{C++} code so it's several times
 #'   faster than \code{lm()}.
 #'
-#'   If \code{regmod = "regular"} then it performs shrinkage regression.  It
+#'   If \code{regmod = "regular"} then it performs regularized regression.  It
 #'   calculates the \emph{reduced inverse} of the predictor matrix from its
 #'   singular value decomposition.  It performs regularization by selecting
 #'   only the largest \emph{singular values} equal in number to \code{dimax}.
@@ -5712,7 +5743,7 @@ calc_weights <- function(returns, controll) {
     .Call(`_HighFreq_calc_weights`, returns, controll)
 }
 
-#' Simulate (backtest) a rolling portfolio optimization strategy, using
+#' Simulate (backtest) a portfolio momentum strategy, using
 #' \code{RcppArmadillo}.
 #' 
 #' @param \code{retp} A \emph{time series} or a \emph{matrix} of asset
@@ -5743,7 +5774,7 @@ calc_weights <- function(returns, controll) {
 #'
 #' @details
 #'   The function \code{roll_portf()} performs a backtest simulation of a
-#'   rolling portfolio optimization strategy over a \emph{vector} of the end
+#'   portfolio momentum strategy over a \emph{vector} of the end
 #'   points \code{endd}.
 #'   
 #'   It performs a loop over the end points \code{endd}, and subsets the
@@ -5808,7 +5839,7 @@ calc_weights <- function(returns, controll) {
 #' dimax <- 3
 #' # Create a list of portfolio optimization parameters
 #' controll <- HighFreq::param_portf(method="maxsharpe", dimax=dimax, alphac=alphac, scalew="sumsq")
-#' # Simulate a monthly rolling portfolio optimization strategy
+#' # Simulate a monthly portfolio momentum strategy
 #' pnls <- HighFreq::roll_portf(retx, retp, controll=controll, startp=(startp-1), endd=(endd-1))
 #' pnls <- xts::xts(pnls, index(retp))
 #' colnames(pnls) <- "strategy"

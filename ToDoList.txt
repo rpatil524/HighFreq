@@ -29,17 +29,17 @@ Old below:
 
 ## Build scripts:
 
-# Install package from source on local drive
-install.packages(pkgs="C:/Develop/R/HighFreq", repos=NULL, type="source")
-# Install package from source on local drive using R CMD
-R CMD INSTALL C:\Develop\R\HighFreq
+# Install package from source on local drive - run command in R
+install.packages(pkgs="/Users/jerzy/Develop/HighFreq", repos=NULL, type="source")
+# Install package from source on local drive using R CMD in terminal
+R CMD INSTALL /Users/jerzy/Develop/HighFreq
 # Install NPE package from local drive
-setwd("C:/Develop/R/HighFreq")
-install.packages(pkgs="C:/Develop/R/HighFreq", repos=NULL, type="source")
-# Install package from Github
+setwd("/Users/jerzy/Develop/HighFreq")
+install.packages(pkgs="/Users/jerzy/Develop/HighFreq", repos=NULL, type="source")
+# Install package from Github - run command in R
 devtools::install_github(repo="algoquant/HighFreq", force=TRUE)
-# Document the package - run R command
-devtools::document()
+# Document the package - run command in R
+devtools::document("/Users/jerzy/Develop/HighFreq")
 # Build vignette package reference manual from *.Rd files
 system("R CMD Rd2pdf /Users/jerzy/Develop/HighFreq")
 cd /Users/jerzy/Develop/HighFreq
@@ -94,17 +94,56 @@ Therefore 1-second bar returns carry almost no information.
 
 ### Tasks to-do
 
-+ [ ] Update sim_portfoptim() to run_portf().
++ [ ] Create the function run_moment_idiosync(), for calculating the beta and alpha values of several stocks with respect to the market returns.
+The first argument are the market returns, and the remaining arguments are the multiple stock returns.
+Clone /Users/jerzy/Develop/Rcpp/run_moment_idiosync.cpp
 
-+ [ ] Add the function run_vard() for the downside deviation.
++ [ ] Create the function roll_moment_idiosync(), for calculating the beta and alpha values of several stocks with respect to the market returns.
+The first argument are the market returns, and the remaining arguments are the multiple stock returns.
+
++ [ ] Rename sim_portfoptim() to run_portf().
+Rename sim_portfoptim() to run_portfmom()
+
++ [ ] Modify sim_portfoptim() - Perform matrix inverse only if covariance matrix changes significantly
+
++ [x] Rename "rolling portfolio optimization" to "portfolio momentum".
+
++ [x] Update documentation for param_reg() - copy the parameter descriptions from run_reg().
+
++ [x] In param_portf() add a lagg argument, and it use in roll_portf(). 
+The argument lagg is the number of periods to lag the calibration interval relative to the test interval.  The default to lagg=1, which means the calibration interval ends just before the test interval starts.
+If lagg=2, then the calibration interval ends one period before the test interval starts.  If the periods are weekly, then the calibration interval ends one week before the test interval starts.  This excludes the most recent week from the calibration interval.  
+/Users/jerzy/Develop/Rcpp/roll_portf.cpp
+
++ [ ] Update documentation for run_var(), to handle case for an input with multiple columms.
+
++ [ ] In run_var() with method="nonparametric", return both the mean and the variance.
+
++ [ ] Calculate the EMA covariance estimator for two stocks from the EMA variance of the sum and difference of the stocks.  
+Is it the same as run_covar()?
+
++ [ ] Enhance the online functions run_*() to handle NA values.
+If a row is NA, they should return NA, not an error.
+If a row is not NA, but the previous row was NA, they start the recursion from scratch.
+
++ [ ] Create the functions rowsums(), colsums(), and calc_covar() so that they ignore NA values
+Similar to colMeans(retis, na.rm=TRUE) and cov(retis, use="pairwise.complete.obs")
+
++ [ ] Add optimization functions.
+
++ [ ] Create a new package called Risk, for risk and return calculations, by combining from rutils and HighFreq.
+
++ [ ] Create a new package called Portfolio, by cloning HighFreq.  Add daily stock prices and returns.
+
++ [ ] Add downside deviation to HighFreq::run_var()
+Adapt the function run_vard() for the running downside deviation in tetest_temp.cpp
+
++ [ ] Update the SPY and TAQ data files.
+https://github.com/algoquant/HighFreq/issues/4
 
 + [ ] In HighFreq::roll_var(), return the rolling mean, similar to HighFreq::run_var().
 
 + [ ] If lambdaf=1 then use expanding window since inception, instead of EMA.
-
-+ [ ] In run_mean() calculate the downside variance.
-
-+ [ ] Create a function which calculates the running downside variance. 
 
 + [ ] Create the function run_macd() for the MACD indicator. 
 
@@ -160,13 +199,6 @@ Follow the example of run_mean() and use OHLC prices and add an extra parameter 
 + [ ] In the function back_test() calculate the mean of returns using function calc_mean() and the covariance of returns using function calc_covar()?
 Add weight scaling instead of in calc_weights()?
 
-+ [ ] Create the functions rowsums(), colsums(), and calc_covar() so that they ignore NA values
-Similar to colMeans(retis, na.rm=TRUE) and cov(retis, use="pairwise.complete.obs")
-
-+ [ ] Modify the online functions run_*() so that they perform calculations with NA data
-If a row is NA, they should return NA, not an error.
-If a row is not NA, but the previous row was NA, they start the recursion from scratch.
-
 + [ ] Add t-values of the alpha and betas to run_reg()?
 
 + [ ] Compare the outputs of functions run_reg() versus roll_reg()
@@ -200,8 +232,6 @@ Repurpose the function roll_zscores() to calculate the z-scores for different lo
 + [ ] Create the function sim_pca_momentum() to simulate a running PCA momentum strategy - clone run_reg()
 Validate the principal components produced by push_eigen().
 The principal component weights are indifferent to their sign.  The weights with signs flipped are also principal component weights.  Therefore push_eigen() can produce weights that oscillate in sign.  So sim_portfoptim() needs logic that ensures that the weights change gradually.
-
-+ [ ] Modify sim_portfoptim() - Perform matrix inverse only if covariance matrix changes significantly
 
 + [ ] Modify calc_eigen() - pass the eigenvalues and eigenvectors by reference instead of returning list - adapt push_eigen()
 Void (no return value - modifies the data in place).
@@ -335,9 +365,9 @@ It should return a named vector of coefficients, tvals, and zscore - works only 
 + [ ] Deprecate function roll_conv_ref() ?
 Does it actually calculate by reference?
 
-+ [ ] Modify function back_test() so it returns a matrix of strategy returns and positions, not just returns
++ [ ] Modify function back_test() so it returns a matrix of strategy returns and positions, not just returns.
 
-+ [ ] Modify back_test() add parameter for lagging the weights - for applying the weights with an extra lag
++ [ ] Modify back_test() add parameter for lagging the weights - for applying the weights with an extra lag.
 
 + [ ] Convert all time loops to loops over the end points, using calc_endpoints() and calc_startpoints()
 
@@ -955,7 +985,7 @@ The prototype is in test_temp.cpp
 
 + [x] Create function calc_reg() for performing different types of regressions
 It should return a vector of coefficients, tvals, and zscore.
-It's already partially implemented in C:/Develop/R/Rcpp/roll_reg.cpp
+It's already partially implemented in /Users/jerzy/Develop/R/Rcpp/roll_reg.cpp
 
 + [x] Create function roll_reg() for performing rolling PCA and robust regressions
 It should loop over end points using calc_endpoints() and calc_startpoints().
@@ -964,10 +994,10 @@ It should return a matrix of coefficients, tvals, and zscores.
 + [x] Update functions kurtosis_type() and calc_kurtosis() with actual kurtosis methods.
 
 + [x] Create function roll_kurtosis() for the rolling kurtosis estimator (fourth moment) using RcppArmadillo
-It's already copied from C:/Develop/R/Rcpp/roll_kurtosis.cpp
+It's already copied from /Users/jerzy/Develop/R/Rcpp/roll_kurtosis.cpp
 
 + [x] Create a function called roll_skew() for the rolling skewness estimator (third moment) using RcppArmadillo: include robust estimators
-It's already implemented in C:/Develop/R/Rcpp/roll_skew.cpp
+It's already implemented in /Users/jerzy/Develop/R/Rcpp/roll_skew.cpp
 
 + [x] In all the calc_* functions, return zero if number of rows is small
 

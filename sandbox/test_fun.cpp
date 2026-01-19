@@ -216,7 +216,7 @@ arma::mat run_pca_momentum(const arma::mat& returnm, // Asset returns
   arma::rowvec weightv(ncols, fill::ones); // Principal component weights
   arma::rowvec weightp(ncols, fill::ones); // Past principal component weights
   arma::rowvec weightl(ncols, fill::ones); // Lagged principal component weights
-  arma::colvec stratret(nrows); // Portfolio strategy returns
+  arma::colvec pnls(nrows); // Portfolio strategy PnLs
   double weightd; // Sum of squared principal component weights
   double lambda1 = 1-lambda;
   
@@ -234,8 +234,8 @@ arma::mat run_pca_momentum(const arma::mat& returnm, // Asset returns
     newdata = returnm.row(it)/arma::sqrt(varv);
     // Calculate the eigen portfolio returns - the products of the previous eigen vectors times the scaled returns
     eigenret = newdata*eigenvec;
-    // Calculate the strategy returns - the products of the lagged weights times the eigen returns
-    stratret(it) = arma::dot(newdata, weightl);
+    // Calculate the strategy PnLs - the products of the lagged weights times the eigen returns
+    pnls(it) = arma::dot(newdata, weightl);
     // Update the covariance matrix with new row of eigen returns
     if (scalit) {
       push_covar(newdata, covmat, meanv, lambdacov);
@@ -277,7 +277,7 @@ arma::mat run_pca_momentum(const arma::mat& returnm, // Asset returns
   }  // end for
   
   // Return the portfolio returns and the first two eigen vectors
-  return arma::join_rows(stratret, eigenout);
+  return arma::join_rows(pnls, eigenout);
   
 }  // end run_pca_momentum
 
