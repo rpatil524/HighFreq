@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{roll_portf}
 \alias{roll_portf}
-\title{Simulate (backtest) a rolling portfolio optimization strategy, using
+\title{Simulate (backtest) a portfolio momentum strategy, using
 \code{RcppArmadillo}.}
 \usage{
 roll_portf(
@@ -40,21 +40,34 @@ default is \code{1})}
 \code{0})}
 }
 \value{
-A column \emph{vector} of strategy returns, with the same length as
+A column \emph{vector} of strategy PnLs, with the same length as
   the number of rows of \code{retp}.
 }
 \description{
-Simulate (backtest) a rolling portfolio optimization strategy, using
+Simulate (backtest) a portfolio momentum strategy, using
 \code{RcppArmadillo}.
 }
 \details{
 The function \code{roll_portf()} performs a backtest simulation of a
-  rolling portfolio optimization strategy over a \emph{vector} of the end
+  portfolio momentum strategy over a \emph{vector} of the end
   points \code{endd}.
   
   It performs a loop over the end points \code{endd}, and subsets the
   \emph{matrix} of the excess asset returns \code{retx} along its rows,
   between the corresponding \emph{start point} and the \emph{end point}. 
+  
+  The \emph{start} and \emph{end} points determine the \emph{in-sample}
+  calibration interval.  The \emph{lagg} parameter (from the list controll)
+  lags the \emph{start} and \emph{end} points.  The default is \code{lagg =
+  1}, which means that the calibration interval ends just before the
+  \emph{out-of-sample} test interval starts.
+  If \code{lagg=2}, then the calibration interval ends one period before the
+  test interval starts.  
+  If the \emph{end point} periods are weekly, then the calibration interval
+  ends one week before the test interval starts, and the most recent week is
+  excluded from the calibration interval. This improves the momentum
+  strategy performance, because prices from the most recent week tend to
+  revert.
   
   The function \code{roll_portf()} passes the subset matrix of excess
   returns into the function \code{calc_weights()}, which calculates the
@@ -89,10 +102,10 @@ The function \code{roll_portf()} performs a backtest simulation of a
   multiplying the bid-ask spread \code{bidask} times the absolute
   difference between the current weights minus the weights from the previous
   period. Then it subtracts the transaction costs from the out-of-sample
-  strategy returns.
+  strategy PnLs.
   
   The function \code{roll_portf()} returns a \emph{time series} (column
-  \emph{vector}) of strategy returns, of the same length as the number of
+  \emph{vector}) of strategy PnLs, of the same length as the number of
   rows of \code{retp}.
 }
 \examples{
@@ -114,7 +127,7 @@ alphac <- 0.5
 dimax <- 3
 # Create a list of portfolio optimization parameters
 controll <- HighFreq::param_portf(method="maxsharpe", dimax=dimax, alphac=alphac, scalew="sumsq")
-# Simulate a monthly rolling portfolio optimization strategy
+# Simulate a monthly portfolio momentum strategy
 pnls <- HighFreq::roll_portf(retx, retp, controll=controll, startp=(startp-1), endd=(endd-1))
 pnls <- xts::xts(pnls, index(retp))
 colnames(pnls) <- "strategy"

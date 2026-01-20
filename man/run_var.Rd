@@ -2,8 +2,8 @@
 % Please edit documentation in R/RcppExports.R
 \name{run_var}
 \alias{run_var}
-\title{Calculate the trailing mean and variance of streaming \emph{time series} of
-data using an online recursive formula.}
+\title{Calculate the exponential moving average mean and variance of streaming
+\emph{time series} data using an online recursive formula.}
 \usage{
 run_var(timeser, lambdaf)
 }
@@ -18,15 +18,15 @@ A \emph{matrix} with two columns and the same number of rows as the
   means and the second contains the variance.
 }
 \description{
-Calculate the trailing mean and variance of streaming \emph{time series} of
-data using an online recursive formula.
+Calculate the exponential moving average mean and variance of streaming
+\emph{time series} data using an online recursive formula.
 }
 \details{
-The function \code{run_var()} calculates the trailing mean and variance
-  of streaming \emph{time series} of data \eqn{r_t}, by recursively
-  weighting the past variance estimates \eqn{\sigma^2_{t-1}}, with the
-  squared differences of the data minus its trailing means \eqn{(r_t -
-  \bar{r}_t)^2}, using the decay factor \eqn{\lambda^2}:
+The function \code{run_var()} calculates the exponential moving average
+  mean and variance of streaming \emph{time series} data \eqn{r_t}, by
+  recursively weighting the past variance estimates \eqn{\sigma^2_{t-1}},
+  with the squared differences of the data minus its EMA means 
+  \eqn{(r_t - \bar{r}_t)^2}, using the decay factor \eqn{\lambda^2}:
   \deqn{
     \bar{r}_t = \lambda \bar{r}_{t-1} + (1 - \lambda) r_t
   }

@@ -102,7 +102,8 @@ The function \code{run_reg()} performs regressions on the streaming \emph{time
   regression coefficient is equal to the alpha value \eqn{\alpha}.
 
   If \code{regmod = "least_squares"} (the default) then it performs the
-  standard least squares regression.  This is currently the only option.
+  standard least squares regression.  This is the only option for
+  \code{run_reg()}.
 
   The \emph{residuals} and the the \emph{forecast errors} may be scaled by
   their volatilities to obtain the \emph{z-scores}. 

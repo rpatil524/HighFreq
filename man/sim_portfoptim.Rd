@@ -23,7 +23,7 @@ all the \emph{eigen values}).}
 weights.}
 }
 \value{
-A \emph{matrix} of strategy returns and the portfolio weights, with
+A \emph{matrix} of strategy PnLs and the portfolio weights, with
   the same number of rows as the argument \code{rets}.
 }
 \description{
@@ -121,7 +121,7 @@ The function \code{sim_portfoptim()} simulates a portfolio optimization
 
   The function \code{sim_portfoptim()} returns multiple columns of data,
   with the same number of rows as the input argument \code{rets}. The first
-  column contains the strategy returns and the remaining columns contain the
+  column contains the strategy PnLs and the remaining columns contain the
   portfolio weights.
 }
 \examples{
@@ -142,7 +142,7 @@ pnls <- xts::xts(pnls, order.by=datev)
 wealthv <- cbind(retp$VTI, pnls$pnls*sd(retp$VTI)/sd(pnls$pnls))
 colnames(wealthv) <- c("VTI", "Strategy")
 endd <- rutils::calc_endpoints(wealthv, interval="weeks")
-dygraphs::dygraph(cumsum(wealthv)[endd], main="Portfolio Optimization Strategy Returns") \%>\%
+dygraphs::dygraph(cumsum(wealthv)[endd], main="Portfolio Optimization Strategy PnLs") \%>\%
  dyOptions(colors=c("blue", "red"), strokeWidth=2) \%>\%
  dyLegend(width=300)
 # Plot dygraph of weights

@@ -131,6 +131,11 @@ param_reg <- function(regmod = "least_squares", intercept = TRUE, singmin = 1e-5
 #'   \code{dimax = 0} - standard matrix inverse using all the \emph{singular
 #'   values}).
 #'   
+#' @param \code{lagg} An \emph{integer} equal to the number of \emph{periods} 
+#'   used to lag the calibration interval relative to the test interval.  
+#'   The default is \code{lagg = 1}, which means the calibration interval ends
+#'   just before the test interval starts.
+#'   
 #' @param \code{confl} The confidence level for calculating the quantiles of
 #'   returns (the default is \code{confl = 0.75}).
 #'
@@ -2358,7 +2363,7 @@ push_cov2cor <- function(covmat) {
 #' Update the trailing covariance matrix of streaming asset returns,
 #' with a row of new returns using an online recursive formula.
 #' 
-#' @param \code{retsn} A \emph{vector} of new asset returns.
+#' @param \code{retn} A \emph{vector} of new asset returns.
 #' 
 #' @param \code{covmat} A trailing covariance \emph{matrix} of asset returns.
 #' 
@@ -2375,8 +2380,8 @@ push_cov2cor <- function(covmat) {
 #'   covariance matrix in place, without copying the data in memory.
 #'   
 #'   The streaming asset returns \eqn{r_t} contain multiple columns and the
-#'   parameter \code{retsn} represents a single row of \eqn{r_t} - the asset
-#'   returns at time \eqn{t}.  The elements of the vectors \code{retsn} and 
+#'   parameter \code{retn} represents a single row of \eqn{r_t} - the asset
+#'   returns at time \eqn{t}.  The elements of the vectors \code{retn} and 
 #'   \code{meanv} represent single rows of data with multiple columns.
 #'   
 #'   The function \code{push_covar()} accepts \emph{pointers} to the arguments
@@ -2425,18 +2430,18 @@ push_cov2cor <- function(covmat) {
 #' meanv <- colMeans(retss)
 #' covmat <- cov(retss)
 #' # Update the covariance of returns
-#' HighFreq::push_covar(retsn=retp[nrows], covmat=covmat, meanv=meanv, lambdacov=0.9)
+#' HighFreq::push_covar(retn=retp[nrows], covmat=covmat, meanv=meanv, lambdacov=0.9)
 #' }  # end dontrun
 #' 
 #' @export
-push_covar <- function(retsn, covmat, meanv, lambdacov) {
-    invisible(.Call(`_HighFreq_push_covar`, retsn, covmat, meanv, lambdacov))
+push_covar <- function(retn, covmat, meanv, lambdacov) {
+    invisible(.Call(`_HighFreq_push_covar`, retn, covmat, meanv, lambdacov))
 }
 
 #' Update the trailing eigen values and eigen vectors of streaming asset return
 #' data, with a row of new returns.
 #' 
-#' @param \code{retsn} A \emph{vector} of new asset returns.
+#' @param \code{retn} A \emph{vector} of new asset returns.
 #' 
 #' @param \code{covmat} A trailing covariance \emph{matrix} of asset returns.
 #' 
@@ -2460,8 +2465,8 @@ push_covar <- function(retsn, covmat, meanv, lambdacov) {
 #'   the data in memory.
 #'   
 #'   The streaming asset returns \eqn{r_t} contain multiple columns and the
-#'   parameter \code{retsn} represents a single row of \eqn{r_t} - the asset
-#'   returns at time \eqn{t}.  The elements of the vectors \code{retsn},
+#'   parameter \code{retn} represents a single row of \eqn{r_t} - the asset
+#'   returns at time \eqn{t}.  The elements of the vectors \code{retn},
 #'   \code{eigenret}, and \code{meanv} represent single rows of data with
 #'   multiple columns.
 #'   
@@ -2515,20 +2520,20 @@ push_covar <- function(retsn, covmat, meanv, lambdacov) {
 #' covmat <- cov(retss)
 #' # Update the covariance of returns
 #' eigenret <- numeric(NCOL(retp))
-#' HighFreq::push_eigen(retsn=retp[nrows], covmat=covmat, 
+#' HighFreq::push_eigen(retn=retp[nrows], covmat=covmat, 
 #'   eigenval=eigenval, eigenvec=eigenvec, 
 #'   eigenret=eigenret, meanv=meanv, lambdacov=0.9)
 #' }  # end dontrun
 #' 
 #' @export
-push_eigen <- function(retsn, covmat, eigenval, eigenvec, eigenret, meanv, lambdacov) {
-    invisible(.Call(`_HighFreq_push_eigen`, retsn, covmat, eigenval, eigenvec, eigenret, meanv, lambdacov))
+push_eigen <- function(retn, covmat, eigenval, eigenvec, eigenret, meanv, lambdacov) {
+    invisible(.Call(`_HighFreq_push_eigen`, retn, covmat, eigenval, eigenvec, eigenret, meanv, lambdacov))
 }
 
 #' Update the trailing eigen values and eigen vectors of streaming asset return
 #' data, with a row of new returns, using the \emph{SGA} algorithm.
 #' 
-#' @param \code{retsn} A \emph{vector} of new asset returns.
+#' @param \code{retn} A \emph{vector} of new asset returns.
 #' 
 #' @param \code{eigenval} A \emph{vector} of eigen values.
 #' 
@@ -2556,8 +2561,8 @@ push_eigen <- function(retsn, covmat, eigenval, eigenvec, eigenret, meanv, lambd
 #'   eigenelements in place, without copying the data in memory.
 #'   
 #'   The streaming asset returns \eqn{r_t} contain multiple columns and the
-#'   parameter \code{retsn} represents a single row of \eqn{r_t} - the asset
-#'   returns at time \eqn{t}.  The elements of the vectors \code{retsn},
+#'   parameter \code{retn} represents a single row of \eqn{r_t} - the asset
+#'   returns at time \eqn{t}.  The elements of the vectors \code{retn},
 #'   \code{meanv}, and \code{varv} represent single rows of data with multiple
 #'   columns.
 #'   
@@ -2648,14 +2653,14 @@ push_eigen <- function(retsn, covmat, eigenval, eigenvec, eigenret, meanv, lambd
 #' HighFreq::calc_eigen(covmat, eigenval, eigenvec)
 #' # Update the eigen decomposition using SGA
 #' eigenret <- numeric(NCOL(retp))
-#' HighFreq::push_sga(retsn=retp[nrows], 
+#' HighFreq::push_sga(retn=retp[nrows], 
 #'   eigenval=eigenval, eigenvec=eigenvec, 
 #'   eigenret=eigenret, meanv=meanv, varv=varv, lambdaf=0.9, gamma=0.1)
 #' }  # end dontrun
 #' 
 #' @export
-push_sga <- function(retsn, eigenval, eigenvec, eigenret, meanv, varv, lambdaf, gamma) {
-    invisible(.Call(`_HighFreq_push_sga`, retsn, eigenval, eigenvec, eigenret, meanv, varv, lambdaf, gamma))
+push_sga <- function(retn, eigenval, eigenvec, eigenret, meanv, varv, lambdaf, gamma) {
+    invisible(.Call(`_HighFreq_push_sga`, retn, eigenval, eigenvec, eigenret, meanv, varv, lambdaf, gamma))
 }
 
 #' Calculate the trailing covariances of two streaming \emph{time series} of
@@ -5461,7 +5466,7 @@ lik_garch <- function(omegac, alphac, betac, returns, minval = 0.000001) {
 #' @param \code{lambdaw} A decay factor which multiplies the past portfolio
 #'   weights.
 #'   
-#' @return A \emph{matrix} of strategy returns and the portfolio weights, with
+#' @return A \emph{matrix} of strategy PnLs and the portfolio weights, with
 #'   the same number of rows as the argument \code{rets}.
 #'   
 #' @details
@@ -5555,7 +5560,7 @@ lik_garch <- function(omegac, alphac, betac, returns, minval = 0.000001) {
 #' 
 #'   The function \code{sim_portfoptim()} returns multiple columns of data,
 #'   with the same number of rows as the input argument \code{rets}. The first
-#'   column contains the strategy returns and the remaining columns contain the
+#'   column contains the strategy PnLs and the remaining columns contain the
 #'   portfolio weights.
 #'   
 #' @examples
@@ -5576,7 +5581,7 @@ lik_garch <- function(omegac, alphac, betac, returns, minval = 0.000001) {
 #' wealthv <- cbind(retp$VTI, pnls$pnls*sd(retp$VTI)/sd(pnls$pnls))
 #' colnames(wealthv) <- c("VTI", "Strategy")
 #' endd <- rutils::calc_endpoints(wealthv, interval="weeks")
-#' dygraphs::dygraph(cumsum(wealthv)[endd], main="Portfolio Optimization Strategy Returns") %>%
+#' dygraphs::dygraph(cumsum(wealthv)[endd], main="Portfolio Optimization Strategy PnLs") %>%
 #'  dyOptions(colors=c("blue", "red"), strokeWidth=2) %>%
 #'  dyLegend(width=300)
 #' # Plot dygraph of weights
@@ -5769,7 +5774,7 @@ calc_weights <- function(returns, controll) {
 #'   \code{0})
 #'   
 #'   
-#' @return A column \emph{vector} of strategy returns, with the same length as
+#' @return A column \emph{vector} of strategy PnLs, with the same length as
 #'   the number of rows of \code{retp}.
 #'
 #' @details
@@ -5780,6 +5785,19 @@ calc_weights <- function(returns, controll) {
 #'   It performs a loop over the end points \code{endd}, and subsets the
 #'   \emph{matrix} of the excess asset returns \code{retx} along its rows,
 #'   between the corresponding \emph{start point} and the \emph{end point}. 
+#'   
+#'   The \emph{start} and \emph{end} points determine the \emph{in-sample}
+#'   calibration interval.  The \emph{lagg} parameter (from the list controll)
+#'   lags the \emph{start} and \emph{end} points.  The default is \code{lagg =
+#'   1}, which means that the calibration interval ends just before the
+#'   \emph{out-of-sample} test interval starts.
+#'   If \code{lagg=2}, then the calibration interval ends one period before the
+#'   test interval starts.  
+#'   If the \emph{end point} periods are weekly, then the calibration interval
+#'   ends one week before the test interval starts, and the most recent week is
+#'   excluded from the calibration interval. This improves the momentum
+#'   strategy performance, because prices from the most recent week tend to
+#'   revert.
 #'   
 #'   The function \code{roll_portf()} passes the subset matrix of excess
 #'   returns into the function \code{calc_weights()}, which calculates the
@@ -5814,10 +5832,10 @@ calc_weights <- function(returns, controll) {
 #'   multiplying the bid-ask spread \code{bidask} times the absolute
 #'   difference between the current weights minus the weights from the previous
 #'   period. Then it subtracts the transaction costs from the out-of-sample
-#'   strategy returns.
+#'   strategy PnLs.
 #'   
 #'   The function \code{roll_portf()} returns a \emph{time series} (column
-#'   \emph{vector}) of strategy returns, of the same length as the number of
+#'   \emph{vector}) of strategy PnLs, of the same length as the number of
 #'   rows of \code{retp}.
 #'
 #' @examples

@@ -16,8 +16,8 @@ param_reg(
 )
 }
 \arguments{
-\item{\code{method}}{A \emph{character string} specifying the type of
-regression model (the default is \code{method = "least_squares"}).}
+\item{\code{regmod}}{A \emph{character string} specifying the type of
+regression model (the default is \code{regmod = "least_squares"}).}
 
 \item{\code{intercept}}{A \emph{Boolean} specifying whether an intercept
 term should be added to the predictor (the default is \code{intercept =
@@ -32,10 +32,13 @@ values} used for calculating the \emph{reduced inverse} of the
 predictor matrix (the default is \code{dimax = 0} - standard matrix
 inverse using all the \emph{singular values}).}
 
+\item{\code{residscale}}{A \emph{character string} specifying the scaling
+method for the \emph{residuals} and the \emph{forecast errors}.}
+
 \item{\code{confl}}{The confidence level for calculating the quantiles of
 returns (the default is \code{confl = 0.75}).}
 
-\item{\code{alphac}}{The shrinkage intensity of \code{returns} (with values
+\item{\code{alphac}}{The regularization intensity of \code{returns} (with values
 between \code{0} and \code{1} - the default is \code{0}).}
 }
 \value{
@@ -49,11 +52,37 @@ and machine learning functions.
 \details{
 The function \code{param_reg()} creates a named list of model parameters
   that can be passed into regression and machine learning functions.  For
-  example into the functions \code{calc_reg()} and \code{roll_reg()}.
+  example into the functions \code{calc_reg()}, \code{roll_reg()}, and
+  run_reg().
   
   The function \code{param_reg()} simplifies the creation of regression
   parameter lists.  The users can create a parameter list with the default
   values, or they can specify custom parameter values.
+  
+  Depending on the parameter \code{residscale}, the \emph{residuals} and the
+  \emph{forecast errors} may be scaled by their volatilities to obtain the
+  \emph{z-scores}.
+  The default is \code{residscale = "none"} - no scaling.
+  If the argument \code{residscale = "scale"} then the \emph{residuals} are
+  divided by their volatilities without subtracting their means.
+  If the argument \code{residscale = "standardize"} then the residual means
+  are subtracted from the \emph{residuals}, and then they are divided by
+  their volatilities.
+
+  If \code{regmod = "least_squares"} (the default) then it performs the
+  standard least squares regression, the same as the function
+  \code{calc_lm()}, and the function \code{lm()} from the \code{R} package
+  \emph{stats}.
+  But it uses \code{RcppArmadillo} \code{C++} code so it's several times
+  faster than \code{lm()}.
+
+  If \code{regmod = "regular"} then it performs regularized regression.  It
+  calculates the \emph{reduced inverse} of the predictor matrix from its
+  singular value decomposition.  It performs regularization by selecting
+  only the largest \emph{singular values} equal in number to \code{dimax}.
+  
+  If \code{regmod = "quantile"} then it performs quantile regression (not
+  implemented yet).
 }
 \examples{
 \dontrun{

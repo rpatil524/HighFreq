@@ -5,10 +5,10 @@
 \title{Update the trailing eigen values and eigen vectors of streaming asset return
 data, with a row of new returns, using the \emph{SGA} algorithm.}
 \usage{
-push_sga(retsn, eigenval, eigenvec, eigenret, meanv, varv, lambdaf, gamma)
+push_sga(retn, eigenval, eigenvec, eigenret, meanv, varv, lambdaf, gamma)
 }
 \arguments{
-\item{\code{retsn}}{A \emph{vector} of new asset returns.}
+\item{\code{retn}}{A \emph{vector} of new asset returns.}
 
 \item{\code{eigenval}}{A \emph{vector} of eigen values.}
 
@@ -41,8 +41,8 @@ The function \code{push_sga()} updates the trailing eigen values, eigen
   eigenelements in place, without copying the data in memory.
   
   The streaming asset returns \eqn{r_t} contain multiple columns and the
-  parameter \code{retsn} represents a single row of \eqn{r_t} - the asset
-  returns at time \eqn{t}.  The elements of the vectors \code{retsn},
+  parameter \code{retn} represents a single row of \eqn{r_t} - the asset
+  returns at time \eqn{t}.  The elements of the vectors \code{retn},
   \code{meanv}, and \code{varv} represent single rows of data with multiple
   columns.
   
@@ -133,7 +133,7 @@ eigenvec <- matrix(numeric(ncols^2), nc=ncols) # Allocate eigen vectors
 HighFreq::calc_eigen(covmat, eigenval, eigenvec)
 # Update the eigen decomposition using SGA
 eigenret <- numeric(NCOL(retp))
-HighFreq::push_sga(retsn=retp[nrows], 
+HighFreq::push_sga(retn=retp[nrows], 
   eigenval=eigenval, eigenvec=eigenvec, 
   eigenret=eigenret, meanv=meanv, varv=varv, lambdaf=0.9, gamma=0.1)
 }  # end dontrun

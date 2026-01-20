@@ -41,7 +41,7 @@ The function \code{calc_reg()} performs multivariate regression using
   But it uses \code{RcppArmadillo} \code{C++} code so it's several times
   faster than \code{lm()}.
 
-  If \code{regmod = "regular"} then it performs shrinkage regression.  It
+  If \code{regmod = "regular"} then it performs regularized regression.  It
   calculates the \emph{reduced inverse} of the predictor matrix from its
   singular value decomposition.  It performs regularization by selecting
   only the largest \emph{singular values} equal in number to \code{dimax}.

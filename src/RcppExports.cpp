@@ -465,40 +465,40 @@ BEGIN_RCPP
 END_RCPP
 }
 // push_covar
-void push_covar(const arma::rowvec& retsn, arma::mat& covmat, arma::rowvec& meanv, const double& lambdacov);
-RcppExport SEXP _HighFreq_push_covar(SEXP retsnSEXP, SEXP covmatSEXP, SEXP meanvSEXP, SEXP lambdacovSEXP) {
+void push_covar(const arma::rowvec& retn, arma::mat& covmat, arma::rowvec& meanv, const double& lambdacov);
+RcppExport SEXP _HighFreq_push_covar(SEXP retnSEXP, SEXP covmatSEXP, SEXP meanvSEXP, SEXP lambdacovSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::rowvec& >::type retsn(retsnSEXP);
+    Rcpp::traits::input_parameter< const arma::rowvec& >::type retn(retnSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type covmat(covmatSEXP);
     Rcpp::traits::input_parameter< arma::rowvec& >::type meanv(meanvSEXP);
     Rcpp::traits::input_parameter< const double& >::type lambdacov(lambdacovSEXP);
-    push_covar(retsn, covmat, meanv, lambdacov);
+    push_covar(retn, covmat, meanv, lambdacov);
     return R_NilValue;
 END_RCPP
 }
 // push_eigen
-void push_eigen(const arma::rowvec& retsn, arma::mat& covmat, arma::vec& eigenval, arma::mat& eigenvec, arma::rowvec& eigenret, arma::rowvec& meanv, const double& lambdacov);
-RcppExport SEXP _HighFreq_push_eigen(SEXP retsnSEXP, SEXP covmatSEXP, SEXP eigenvalSEXP, SEXP eigenvecSEXP, SEXP eigenretSEXP, SEXP meanvSEXP, SEXP lambdacovSEXP) {
+void push_eigen(const arma::rowvec& retn, arma::mat& covmat, arma::vec& eigenval, arma::mat& eigenvec, arma::rowvec& eigenret, arma::rowvec& meanv, const double& lambdacov);
+RcppExport SEXP _HighFreq_push_eigen(SEXP retnSEXP, SEXP covmatSEXP, SEXP eigenvalSEXP, SEXP eigenvecSEXP, SEXP eigenretSEXP, SEXP meanvSEXP, SEXP lambdacovSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::rowvec& >::type retsn(retsnSEXP);
+    Rcpp::traits::input_parameter< const arma::rowvec& >::type retn(retnSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type covmat(covmatSEXP);
     Rcpp::traits::input_parameter< arma::vec& >::type eigenval(eigenvalSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type eigenvec(eigenvecSEXP);
     Rcpp::traits::input_parameter< arma::rowvec& >::type eigenret(eigenretSEXP);
     Rcpp::traits::input_parameter< arma::rowvec& >::type meanv(meanvSEXP);
     Rcpp::traits::input_parameter< const double& >::type lambdacov(lambdacovSEXP);
-    push_eigen(retsn, covmat, eigenval, eigenvec, eigenret, meanv, lambdacov);
+    push_eigen(retn, covmat, eigenval, eigenvec, eigenret, meanv, lambdacov);
     return R_NilValue;
 END_RCPP
 }
 // push_sga
-void push_sga(const arma::rowvec& retsn, arma::rowvec& eigenval, arma::mat& eigenvec, arma::rowvec& eigenret, arma::rowvec& meanv, arma::rowvec& varv, const double& lambdaf, const double& gamma);
-RcppExport SEXP _HighFreq_push_sga(SEXP retsnSEXP, SEXP eigenvalSEXP, SEXP eigenvecSEXP, SEXP eigenretSEXP, SEXP meanvSEXP, SEXP varvSEXP, SEXP lambdafSEXP, SEXP gammaSEXP) {
+void push_sga(const arma::rowvec& retn, arma::rowvec& eigenval, arma::mat& eigenvec, arma::rowvec& eigenret, arma::rowvec& meanv, arma::rowvec& varv, const double& lambdaf, const double& gamma);
+RcppExport SEXP _HighFreq_push_sga(SEXP retnSEXP, SEXP eigenvalSEXP, SEXP eigenvecSEXP, SEXP eigenretSEXP, SEXP meanvSEXP, SEXP varvSEXP, SEXP lambdafSEXP, SEXP gammaSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::rowvec& >::type retsn(retsnSEXP);
+    Rcpp::traits::input_parameter< const arma::rowvec& >::type retn(retnSEXP);
     Rcpp::traits::input_parameter< arma::rowvec& >::type eigenval(eigenvalSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type eigenvec(eigenvecSEXP);
     Rcpp::traits::input_parameter< arma::rowvec& >::type eigenret(eigenretSEXP);
@@ -506,7 +506,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::rowvec& >::type varv(varvSEXP);
     Rcpp::traits::input_parameter< const double& >::type lambdaf(lambdafSEXP);
     Rcpp::traits::input_parameter< const double& >::type gamma(gammaSEXP);
-    push_sga(retsn, eigenval, eigenvec, eigenret, meanv, varv, lambdaf, gamma);
+    push_sga(retn, eigenval, eigenvec, eigenret, meanv, varv, lambdaf, gamma);
     return R_NilValue;
 END_RCPP
 }

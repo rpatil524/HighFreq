@@ -9,6 +9,7 @@ param_portf(
   method = "sharpem",
   singmin = 1e-05,
   dimax = 0L,
+  lagg = 1L,
   confl = 0.1,
   alphac = 0,
   rankw = FALSE,
@@ -31,6 +32,11 @@ values} used for calculating the \emph{reduced inverse} of the
 \code{covariance matrix} of \code{returns} matrix (the default is
 \code{dimax = 0} - standard matrix inverse using all the \emph{singular
 values}).}
+
+\item{\code{lagg}}{An \emph{integer} equal to the number of \emph{periods} 
+used to lag the calibration interval relative to the test interval.  
+The default is \code{lagg = 1}, which means the calibration interval ends
+just before the test interval starts.}
 
 \item{\code{confl}}{The confidence level for calculating the quantiles of
 returns (the default is \code{confl = 0.75}).}

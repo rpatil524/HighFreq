@@ -5,10 +5,10 @@
 \title{Update the trailing covariance matrix of streaming asset returns,
 with a row of new returns using an online recursive formula.}
 \usage{
-push_covar(retsn, covmat, meanv, lambdacov)
+push_covar(retn, covmat, meanv, lambdacov)
 }
 \arguments{
-\item{\code{retsn}}{A \emph{vector} of new asset returns.}
+\item{\code{retn}}{A \emph{vector} of new asset returns.}
 
 \item{\code{covmat}}{A trailing covariance \emph{matrix} of asset returns.}
 
@@ -30,8 +30,8 @@ The function \code{push_covar()} updates the trailing covariance matrix of
   covariance matrix in place, without copying the data in memory.
   
   The streaming asset returns \eqn{r_t} contain multiple columns and the
-  parameter \code{retsn} represents a single row of \eqn{r_t} - the asset
-  returns at time \eqn{t}.  The elements of the vectors \code{retsn} and 
+  parameter \code{retn} represents a single row of \eqn{r_t} - the asset
+  returns at time \eqn{t}.  The elements of the vectors \code{retn} and 
   \code{meanv} represent single rows of data with multiple columns.
   
   The function \code{push_covar()} accepts \emph{pointers} to the arguments
@@ -80,7 +80,7 @@ retss <- retp[-nrows]
 meanv <- colMeans(retss)
 covmat <- cov(retss)
 # Update the covariance of returns
-HighFreq::push_covar(retsn=retp[nrows], covmat=covmat, meanv=meanv, lambdacov=0.9)
+HighFreq::push_covar(retn=retp[nrows], covmat=covmat, meanv=meanv, lambdacov=0.9)
 }  # end dontrun
 
 }
