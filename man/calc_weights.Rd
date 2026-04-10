@@ -68,7 +68,7 @@ The function \code{calc_weights()} calculates the optimal portfolio
     \strong{w} = \frac{\bar{r}}{\sigma^2}
   }
 
-  \code{calc_weights()} calls the function \code{calc_inv()} to calculate
+  \code{calc_weights()} calls the function \code{calc_invred()} to calculate
   the \emph{reduced inverse} of the \emph{covariance matrix} of
   \code{returns}. It performs regularization by selecting only the largest
   eigenvalues equal in number to \code{dimax}.

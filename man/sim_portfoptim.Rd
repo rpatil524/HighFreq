@@ -62,13 +62,13 @@ The function \code{sim_portfoptim()} simulates a portfolio optimization
   Where \eqn{\lambda_c} is the decay factor which multiplies the past mean
   and covariance.
   
-  It then calls the function \code{HighFreq::calc_inv()} to calculate the
+  It then calls the function \code{HighFreq::calc_invred()} to calculate the
   \emph{reduced inverse} of the covariance matrix using its eigen
   decomposition:
   \deqn{
     \strong{C}^{-1} = \strong{O}_{dimax} \, \Sigma^{-1}_{dimax} \, \strong{O}^T_{dimax}
   }
-  See the function \code{HighFreq::calc_inv()} for details.
+  See the function \code{HighFreq::calc_invred()} for details.
   
   It then calculates the \emph{in-sample} weights of the maximum Sharpe
   portfolio, by multiplying the inverse covariance matrix times the trailing

@@ -2,98 +2,51 @@
 % Please edit documentation in R/RcppExports.R
 \name{calc_inv}
 \alias{calc_inv}
-\title{Calculate the \emph{reduced inverse} of a symmetric \emph{matrix} of
-data using eigen decomposition.}
+\title{Calculate the inverse of a square positive definite \emph{matrix} using
+\code{RcppArmadillo}.}
 \usage{
-calc_inv(matrixv, dimax = 0L, singmin = 0)
+calc_inv(matrixv)
 }
 \arguments{
-\item{\code{matrixv}}{A symmetric \emph{matrix} of data.}
-
-\item{\code{dimax}}{An \emph{integer} equal to the number of \emph{eigen
-values} used for calculating the \emph{reduced inverse} of the matrix
-\code{matrixv} (the default is \code{dimax = 0} - standard matrix inverse
-using all the \emph{eigen values}).}
-
-\item{\code{singmin}}{A \emph{numeric} threshold level for discarding
-small \emph{eigen values} in order to regularize the inverse of the matrix
-\code{matrixv} (the default is \code{0.0}).}
+\item{\code{matrixv}}{A square positive definite \emph{matrix}.}
 }
 \value{
-A \emph{matrix} equal to the \emph{reduced inverse} of the
-  matrix \code{matrixv}.
+A \emph{matrix} equal to the inverse of \code{matrixv}.
 }
 \description{
-Calculate the \emph{reduced inverse} of a symmetric \emph{matrix} of
-data using eigen decomposition.
+Calculate the inverse of a square positive definite \emph{matrix} using
+\code{RcppArmadillo}.
 }
 \details{
-The function \code{calc_inv()} calculates the \emph{reduced inverse}
-  of the matrix \code{matrixv} using eigen decomposition.
+The function \code{calc_inv()} calculates the inverse of the matrix
+  \code{matrixv} using the \code{RcppArmadillo} function \code{arma::inv()}.
   
-  The function \code{calc_inv()} first performs eigen decomposition of the
-  matrix \code{matrixv}.
-  The eigen decomposition of a matrix \eqn{\strong{C}} is defined as the
-  factorization:
+  The product of a matrix \eqn{\strong{C}} times its inverse
+  \eqn{\strong{C}^{-1}} is equal to the identity matrix \eqn{\strong{I}}:
   \deqn{
-    \strong{C} = \strong{O} \, \Sigma \, \strong{O}^T
-  } Where \eqn{\strong{O}} is the matrix of \emph{eigen vectors} and
-  \eqn{\Sigma} is a diagonal matrix of \emph{eigen values}.
-  
-  The inverse \eqn{\strong{C}^{-1}} of the matrix \eqn{\strong{C}} can be
-  calculated from the eigen decomposition as:
-  \deqn{
-    \strong{C}^{-1} = \strong{O} \, \Sigma^{-1} \, \strong{O}^T
+    \strong{C} \, \strong{C}^{-1} = \strong{I}
   }
   
-  The \emph{reduced inverse} of the matrix \eqn{\strong{C}} is obtained
-  by removing \emph{eigen vectors} with very small \emph{eigen values}:
-  \deqn{
-    \strong{C}^{-1} = \strong{O}_{dimax} \, \Sigma^{-1}_{dimax} \, \strong{O}^T_{dimax}
-  }
-  Where \eqn{\strong{O}_{dimax}} is the matrix of \emph{eigen vectors} 
-  that correspond to the largest \emph{eigen values} \eqn{\Sigma_{dimax}}. 
-  
-  The function \code{calc_inv()} applies regularization to the matrix
-  inverse using the arguments \code{dimax} and \code{singmin}.
-  
-  The function \code{calc_inv()} applies regularization by discarding the
-  smallest \emph{eigen values} \eqn{\Sigma_i} that are less than the
-  threshold level \code{singmin} times the sum of all the \emph{eigen
-  values}: \deqn{\Sigma_i < eigen\_thresh \cdot (\sum{\Sigma_i})}
-  
-  It also discards additional \emph{eigen vectors} so that only the highest
-  order \emph{eigen vectors} remain, up to order \code{dimax}.
-  It calculates the \emph{reduced inverse} from the eigen decomposition
-  using only the largest \emph{eigen values} up to \code{dimax}.  For
-  example, if
-  \code{dimax = 3} then it only uses the \code{3} highest order \emph{eigen
-  vectors}, with the largest \emph{eigen values}. This has the effect of
-  dimension reduction.
-  
-  If the matrix \code{matrixv} has a large number of small \emph{eigen
-  values}, then the number of remaining \emph{eigen values} may be less than
-  \code{dimax}.
+  The matrix \code{matrixv} must be square and positive definite (non-singular).
+  For singular or near-singular matrices, consider using \code{calc_ginv()}
+  which computes the Moore-Penrose pseudo-inverse.
+  But \code{calc_ginv()} can be several times slower than \code{calc_inv()}
+  for large matrices.
+  For symmetric positive definite matrices, consider using 
+  \code{calc_inv_sympd()} which is slightly faster.
 }
 \examples{
 \dontrun{
-# Calculate ETF returns
-retp <- na.omit(rutils::etfenv$returns[, c("VTI", "TLT", "DBC")])
-# Calculate covariance matrix
-covmat <- cov(retp)
+# Create a random positive definite matrix
+matv <- matrix(rnorm(2500), nc=50)
+matv <- t(matv) \%*\% matv
+# Add small identity matrix to ensure positive definiteness
+matv <- matv + 1e-2*diag(50)
 # Calculate matrix inverse using RcppArmadillo
-invmat <- HighFreq::calc_inv(covmat)
+invmat <- HighFreq::calc_inv(matv)
 # Calculate matrix inverse in R
-invr <- solve(covmat)
+invr <- solve(matv)
 all.equal(invmat, invr, check.attributes=FALSE)
-# Calculate the reduced inverse using RcppArmadillo
-invmat <- HighFreq::calc_inv(covmat, dimax=3)
-# Calculate the reduced inverse using eigen decomposition in R
-eigend <- eigen(covmat)
-dimax <- 1:3
-invr <- eigend$vectors[, dimax] \%*\% (t(eigend$vectors[, dimax])/eigend$values[dimax])
-# Compare RcppArmadillo with R
-all.equal(invmat, invr)
 }  # end dontrun
 
 }

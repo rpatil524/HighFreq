@@ -94,26 +94,50 @@ Therefore 1-second bar returns carry almost no information.
 
 ### Tasks to-do
 
++ [ ] Find out why HighFreq::roll_portf() gives the same PnLs for 
+  controll <- HighFreq::param_portf(method="minvarlin", scalew="sumone")
+and for
+  controll <- HighFreq::param_portf(method="minvarlin")
+In the homework:
+  # Summary: Simulate a minimum variance portfolio 
+  # momentum strategy.
+The default is scaling to volatility target, but it doesn't work.
+
++ [ ] Create function run_kelly().  Clone run_var().
+
++ [ ] Rename sim_portfoptim() back to sim_momentum_portf()
+
++ [ ] Create function sim_momentum() to simulate a running momentum strategy.  Adapt from run_var() and sim_portfoptim()
+Calculate the portfolio variance and scale the weights
+
+Create an Rcpp function called sim_momentum() in the file: 
+/Users/jerzy/Develop/Presentations/strat_momentum.R
+Clone the R code from the file:
+/Users/jerzy/Develop/Presentations/strat_momentum.R
+Adapt the Rcpp code from the functions run_var() and sim_portfoptim() in the file:
+/Users/jerzy/Develop/HighFreq/src/HighFreq.cpp
+
+
++ [ ] Modify the function mult_mat() so that it can also perform inner multiplication, like the %*% operator.  Ignore NA values.
+/Users/jerzy/Develop/Rcpp/mult_mat.cpp
+
++ [ ] In sim_portfoptim() add a volatility target and scale the weights to the volatility target.
+Calculate the trailing EMA variance of the in-sample PnLs.
+
++ [ ] Modify sim_portfoptim() - Perform matrix inverse only if the covariance matrix changes significantly.
+
++ [ ] Rename run_var_ohlc() to run_var_range()?
+
++ [ ] Add to the function lik_garch() the argument mu for the average return.
+
++ [ ] Implement coordinate descent methods in C++.
+
 + [ ] Create the function run_moment_idiosync(), for calculating the beta and alpha values of several stocks with respect to the market returns.
 The first argument are the market returns, and the remaining arguments are the multiple stock returns.
 Clone /Users/jerzy/Develop/Rcpp/run_moment_idiosync.cpp
 
 + [ ] Create the function roll_moment_idiosync(), for calculating the beta and alpha values of several stocks with respect to the market returns.
 The first argument are the market returns, and the remaining arguments are the multiple stock returns.
-
-+ [ ] Rename sim_portfoptim() to run_portf().
-Rename sim_portfoptim() to run_portfmom()
-
-+ [ ] Modify sim_portfoptim() - Perform matrix inverse only if covariance matrix changes significantly
-
-+ [x] Rename "rolling portfolio optimization" to "portfolio momentum".
-
-+ [x] Update documentation for param_reg() - copy the parameter descriptions from run_reg().
-
-+ [x] In param_portf() add a lagg argument, and it use in roll_portf(). 
-The argument lagg is the number of periods to lag the calibration interval relative to the test interval.  The default to lagg=1, which means the calibration interval ends just before the test interval starts.
-If lagg=2, then the calibration interval ends one period before the test interval starts.  If the periods are weekly, then the calibration interval ends one week before the test interval starts.  This excludes the most recent week from the calibration interval.  
-/Users/jerzy/Develop/Rcpp/roll_portf.cpp
 
 + [ ] Update documentation for run_var(), to handle case for an input with multiple columms.
 
@@ -623,6 +647,21 @@ Show that idiosyncratic volatility is a strong predictor of idiosyncratic skewne
 
 ### Tasks finished
 
++ [x] Rename calc_inv() to calc_invred() 
+
++ [x] Create function calc_inv() using arma::inv()
+
++ [x] Create function calc_ginv() using arma::pinv()
+
++ [x] Rename "rolling portfolio optimization" to "portfolio momentum".
+
++ [x] Update documentation for param_reg() - copy the parameter descriptions from run_reg().
+
++ [x] In param_portf() add a lagg argument, and use it in roll_portf(). 
+The argument lagg is the number of periods to lag the calibration interval relative to the test interval.  The default to lagg=1, which means the calibration interval ends just before the test interval starts.
+If lagg=2, then the calibration interval ends one period before the test interval starts.  If the periods are weekly, then the calibration interval ends one week before the test interval starts.  This excludes the most recent week from the calibration interval.  
+/Users/jerzy/Develop/Rcpp/roll_portf.cpp
+
 + [x] In the C++ functions, change the argument scale, to scalit.  To be consistent with the R functions.
 
 + [x] Rename season_ality() to calc_season().
@@ -686,6 +725,8 @@ deg_free to degf
 
 + [x] In run_covar() add means to the output
 
++ [x] In run_reg() handle singular matrices by replacing inv() with pinv().  Just use pinv() for the initial inverse and in the loop use inv().
+
 + [x] Fix run_reg() - don't center the response and predictors
 
 + [x] Fix run_reg() - it should produce same betas as run_covar()
@@ -698,7 +739,7 @@ It should simply be:
 run_zscores() has errors in the code and in the documentation.
 For example, the means are not subtracted from the returns before squaring them.
 
-+ [x] Create the function sim_portfoptim() to simulate a running portfolio optimization strategy
++ [x] Create the function sim_portfoptim() to simulate a running portfolio optimization strategy.
 Output the weights.  Average the weights.
 Old version was called run_portf()
 
@@ -925,7 +966,7 @@ This is equivalent to extending the holding period beyond the rebalancing period
 Answer: Because roll_var(method="quantile") is not MAD - use method="nonparametric" instead.
 roll_var(method="nonparametric") is slightly faster than TTR::runMAD().
 
-+ [x] Create function lik_garch() to calculate the GARCH log-likelihood
++ [x] Create function lik_garch() to calculate the GARCH log-likelihood.
 
 + [x] Update sim_arima() to accept matrix not vector - rename sim_arima() to sim_ar()
 

@@ -242,15 +242,37 @@ BEGIN_RCPP
 END_RCPP
 }
 // calc_inv
-arma::mat calc_inv(const arma::mat& matrixv, arma::uword dimax, double singmin);
-RcppExport SEXP _HighFreq_calc_inv(SEXP matrixvSEXP, SEXP dimaxSEXP, SEXP singminSEXP) {
+arma::mat calc_inv(const arma::mat& matrixv);
+RcppExport SEXP _HighFreq_calc_inv(SEXP matrixvSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type matrixv(matrixvSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_inv(matrixv));
+    return rcpp_result_gen;
+END_RCPP
+}
+// calc_ginv
+arma::mat calc_ginv(const arma::mat& matrixv);
+RcppExport SEXP _HighFreq_calc_ginv(SEXP matrixvSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type matrixv(matrixvSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_ginv(matrixv));
+    return rcpp_result_gen;
+END_RCPP
+}
+// calc_invred
+arma::mat calc_invred(const arma::mat& matrixv, arma::uword dimax, double singmin);
+RcppExport SEXP _HighFreq_calc_invred(SEXP matrixvSEXP, SEXP dimaxSEXP, SEXP singminSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type matrixv(matrixvSEXP);
     Rcpp::traits::input_parameter< arma::uword >::type dimax(dimaxSEXP);
     Rcpp::traits::input_parameter< double >::type singmin(singminSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_inv(matrixv, dimax, singmin));
+    rcpp_result_gen = Rcpp::wrap(calc_invred(matrixv, dimax, singmin));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -992,17 +1014,18 @@ BEGIN_RCPP
 END_RCPP
 }
 // sim_portfoptim
-arma::mat sim_portfoptim(const arma::mat& rets, const arma::uword& dimax, const double& lambdaf, const double& lambdacov, const double& lambdaw);
-RcppExport SEXP _HighFreq_sim_portfoptim(SEXP retsSEXP, SEXP dimaxSEXP, SEXP lambdafSEXP, SEXP lambdacovSEXP, SEXP lambdawSEXP) {
+arma::mat sim_portfoptim(const arma::mat& rets, const arma::uword dimax, const double lambdaf, const double lambdacov, const double lambdaw, const double volt);
+RcppExport SEXP _HighFreq_sim_portfoptim(SEXP retsSEXP, SEXP dimaxSEXP, SEXP lambdafSEXP, SEXP lambdacovSEXP, SEXP lambdawSEXP, SEXP voltSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type rets(retsSEXP);
-    Rcpp::traits::input_parameter< const arma::uword& >::type dimax(dimaxSEXP);
-    Rcpp::traits::input_parameter< const double& >::type lambdaf(lambdafSEXP);
-    Rcpp::traits::input_parameter< const double& >::type lambdacov(lambdacovSEXP);
-    Rcpp::traits::input_parameter< const double& >::type lambdaw(lambdawSEXP);
-    rcpp_result_gen = Rcpp::wrap(sim_portfoptim(rets, dimax, lambdaf, lambdacov, lambdaw));
+    Rcpp::traits::input_parameter< const arma::uword >::type dimax(dimaxSEXP);
+    Rcpp::traits::input_parameter< const double >::type lambdaf(lambdafSEXP);
+    Rcpp::traits::input_parameter< const double >::type lambdacov(lambdacovSEXP);
+    Rcpp::traits::input_parameter< const double >::type lambdaw(lambdawSEXP);
+    Rcpp::traits::input_parameter< const double >::type volt(voltSEXP);
+    rcpp_result_gen = Rcpp::wrap(sim_portfoptim(rets, dimax, lambdaf, lambdacov, lambdaw, volt));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1056,7 +1079,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_HighFreq_mult_mat_ref", (DL_FUNC) &_HighFreq_mult_mat_ref, 3},
     {"_HighFreq_calc_eigen", (DL_FUNC) &_HighFreq_calc_eigen, 3},
     {"_HighFreq_calc_eigenp", (DL_FUNC) &_HighFreq_calc_eigenp, 2},
-    {"_HighFreq_calc_inv", (DL_FUNC) &_HighFreq_calc_inv, 3},
+    {"_HighFreq_calc_inv", (DL_FUNC) &_HighFreq_calc_inv, 1},
+    {"_HighFreq_calc_ginv", (DL_FUNC) &_HighFreq_calc_ginv, 1},
+    {"_HighFreq_calc_invred", (DL_FUNC) &_HighFreq_calc_invred, 3},
     {"_HighFreq_calc_invsvd", (DL_FUNC) &_HighFreq_calc_invsvd, 3},
     {"_HighFreq_calc_invrec", (DL_FUNC) &_HighFreq_calc_invrec, 3},
     {"_HighFreq_calc_invref", (DL_FUNC) &_HighFreq_calc_invref, 1},
@@ -1110,7 +1135,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_HighFreq_sim_ar", (DL_FUNC) &_HighFreq_sim_ar, 2},
     {"_HighFreq_sim_df", (DL_FUNC) &_HighFreq_sim_df, 5},
     {"_HighFreq_lik_garch", (DL_FUNC) &_HighFreq_lik_garch, 5},
-    {"_HighFreq_sim_portfoptim", (DL_FUNC) &_HighFreq_sim_portfoptim, 5},
+    {"_HighFreq_sim_portfoptim", (DL_FUNC) &_HighFreq_sim_portfoptim, 6},
     {"_HighFreq_calc_weights", (DL_FUNC) &_HighFreq_calc_weights, 2},
     {"_HighFreq_roll_portf", (DL_FUNC) &_HighFreq_roll_portf, 8},
     {NULL, NULL, 0}

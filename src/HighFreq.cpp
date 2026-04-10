@@ -19,7 +19,7 @@ using namespace arma::newarp;
 
 
 ////////////////////////////////////////////////////////////
-// Functions miscellaneous
+// Miscellaneous
 ////////////////////////////////////////////////////////////
 
 
@@ -1202,7 +1202,7 @@ std::vector<std::string> remove_dup(std::vector<std::string> stringv) {
 
 
 ////////////////////////////////////////////////////////////
-// Functions for matrix algebra
+// Matrix algebra
 ////////////////////////////////////////////////////////////
 
 
@@ -1563,6 +1563,112 @@ Rcpp::List calc_eigenp(arma::mat& matrixv, const arma::uword& neigen) {
 
 
 
+////////////////////////////////////////////////////////////
+//' Calculate the inverse of a square positive definite \emph{matrix} using
+//' \code{RcppArmadillo}.
+//' 
+//' @param \code{matrixv} A square positive definite \emph{matrix}.
+//'
+//' @return A \emph{matrix} equal to the inverse of \code{matrixv}.
+//'
+//' @details
+//'   The function \code{calc_inv()} calculates the inverse of the matrix
+//'   \code{matrixv} using the \code{RcppArmadillo} function \code{arma::inv()}.
+//'   
+//'   The product of a matrix \eqn{\strong{C}} times its inverse
+//'   \eqn{\strong{C}^{-1}} is equal to the identity matrix \eqn{\strong{I}}:
+//'   \deqn{
+//'     \strong{C} \, \strong{C}^{-1} = \strong{I}
+//'   }
+//'   
+//'   The matrix \code{matrixv} must be square and positive definite (non-singular).
+//'   For singular or near-singular matrices, consider using \code{calc_ginv()}
+//'   which computes the Moore-Penrose pseudo-inverse.
+//'   But \code{calc_ginv()} can be several times slower than \code{calc_inv()}
+//'   for large matrices.
+//'   For symmetric positive definite matrices, consider using 
+//'   \code{calc_inv_sympd()} which is slightly faster.
+//'   
+//' @examples
+//' \dontrun{
+//' # Create a random positive definite matrix
+//' matv <- matrix(rnorm(2500), nc=50)
+//' matv <- t(matv) %*% matv
+//' # Add small identity matrix to ensure positive definiteness
+//' matv <- matv + 1e-2*diag(50)
+//' # Calculate matrix inverse using RcppArmadillo
+//' invmat <- HighFreq::calc_inv(matv)
+//' # Calculate matrix inverse in R
+//' invr <- solve(matv)
+//' all.equal(invmat, invr, check.attributes=FALSE)
+//' }  # end dontrun
+//' 
+//' @export
+// [[Rcpp::export]]
+arma::mat calc_inv(const arma::mat& matrixv) {
+  
+  // Calculate the reduced inverse from the eigen decomposition
+  return arma::inv(matrixv);
+  
+}  // end calc_inv
+
+
+
+////////////////////////////////////////////////////////////
+//' Calculate the generalized inverse (Moore-Penrose pseudo-inverse) of a 
+//' \emph{matrix} using \code{RcppArmadillo}.
+//' 
+//' @param \code{matrixv} A \emph{matrix} (can be rectangular or singular).
+//'
+//' @return A \emph{matrix} equal to the pseudo-inverse of \code{matrixv}.
+//'
+//' @details
+//'   The function \code{calc_ginv()} calculates the generalized inverse
+//'   (Moore-Penrose pseudo-inverse) of the matrix \code{matrixv} using the
+//'   \code{RcppArmadillo} function \code{arma::pinv()}.
+//'   
+//'   The generalized inverse \eqn{\strong{C}^{+}} of a matrix \eqn{\strong{C}} 
+//'   satisfies the Moore-Penrose condition:
+//'   \deqn{
+//'     \strong{C} \, \strong{C}^{+} \, \strong{C} = \strong{C}
+//'   }
+//'   Which is a generalization of the standard inverse condition: 
+//'   \deqn{
+//'     \strong{C} \, \strong{C}^{-1} = \strong{I}
+//'   }
+//'   
+//'   Unlike the standard inverse, the generalized inverse exists for any matrix,
+//'   including rectangular and singular matrices. For non-singular square 
+//'   matrices, the generalized inverse equals the standard inverse.
+//'   
+//'   The generalized inverse is computed using singular value decomposition (SVD),
+//'   which makes it more robust but several times slower than \code{calc_inv()}.
+//'   For large non-singular matrices, \code{calc_inv()} is preferred for speed.
+//'   
+//' @examples
+//' \dontrun{
+//' # Create a singular matrix (rank deficient)
+//' matv <- matrix(rnorm(25), nc=5)
+//' matv[, 5] <- matv[, 1]  # Make it singular
+//' # Calculate generalized inverse using RcppArmadillo
+//' invmat <- HighFreq::calc_ginv(matv)
+//' # Calculate generalized inverse using MASS package in R
+//' invr <- MASS::ginv(matv)
+//' all.equal(invmat, invr, check.attributes=FALSE)
+//' # Verify Moore-Penrose condition
+//' all.equal(matv %*% invmat %*% matv, matv, check.attributes=FALSE)
+//' }  # end dontrun
+//' 
+//' @export
+// [[Rcpp::export]]
+arma::mat calc_ginv(const arma::mat& matrixv) {
+ 
+ // Calculate the generalized inverse (Moore-Penrose pseudo-inverse)
+ return arma::pinv(matrixv);
+ 
+}  // end calc_ginv
+
+
 
 ////////////////////////////////////////////////////////////
 //' Calculate the \emph{reduced inverse} of a symmetric \emph{matrix} of
@@ -1583,10 +1689,10 @@ Rcpp::List calc_eigenp(arma::mat& matrixv, const arma::uword& neigen) {
 //'   matrix \code{matrixv}.
 //'
 //' @details
-//'   The function \code{calc_inv()} calculates the \emph{reduced inverse}
+//'   The function \code{calc_invred()} calculates the \emph{reduced inverse}
 //'   of the matrix \code{matrixv} using eigen decomposition.
 //'   
-//'   The function \code{calc_inv()} first performs eigen decomposition of the
+//'   The function \code{calc_invred()} first performs eigen decomposition of the
 //'   matrix \code{matrixv}.
 //'   The eigen decomposition of a matrix \eqn{\strong{C}} is defined as the
 //'   factorization:
@@ -1609,10 +1715,10 @@ Rcpp::List calc_eigenp(arma::mat& matrixv, const arma::uword& neigen) {
 //'   Where \eqn{\strong{O}_{dimax}} is the matrix of \emph{eigen vectors} 
 //'   that correspond to the largest \emph{eigen values} \eqn{\Sigma_{dimax}}. 
 //'   
-//'   The function \code{calc_inv()} applies regularization to the matrix
+//'   The function \code{calc_invred()} applies regularization to the matrix
 //'   inverse using the arguments \code{dimax} and \code{singmin}.
 //'   
-//'   The function \code{calc_inv()} applies regularization by discarding the
+//'   The function \code{calc_invred()} applies regularization by discarding the
 //'   smallest \emph{eigen values} \eqn{\Sigma_i} that are less than the
 //'   threshold level \code{singmin} times the sum of all the \emph{eigen
 //'   values}: \deqn{\Sigma_i < eigen\_thresh \cdot (\sum{\Sigma_i})}
@@ -1637,12 +1743,12 @@ Rcpp::List calc_eigenp(arma::mat& matrixv, const arma::uword& neigen) {
 //' # Calculate covariance matrix
 //' covmat <- cov(retp)
 //' # Calculate matrix inverse using RcppArmadillo
-//' invmat <- HighFreq::calc_inv(covmat)
+//' invmat <- HighFreq::calc_invred(covmat)
 //' # Calculate matrix inverse in R
 //' invr <- solve(covmat)
 //' all.equal(invmat, invr, check.attributes=FALSE)
 //' # Calculate the reduced inverse using RcppArmadillo
-//' invmat <- HighFreq::calc_inv(covmat, dimax=3)
+//' invmat <- HighFreq::calc_invred(covmat, dimax=3)
 //' # Calculate the reduced inverse using eigen decomposition in R
 //' eigend <- eigen(covmat)
 //' dimax <- 1:3
@@ -1653,7 +1759,7 @@ Rcpp::List calc_eigenp(arma::mat& matrixv, const arma::uword& neigen) {
 //' 
 //' @examples
 // [[Rcpp::export]]
-arma::mat calc_inv(const arma::mat& matrixv, 
+arma::mat calc_invred(const arma::mat& matrixv, 
                    arma::uword dimax = 0, // Number of eigen vectors for dimension reduction
                    double singmin = 0.0) { // Threshold for discarding small eigen values
   
@@ -1682,7 +1788,7 @@ arma::mat calc_inv(const arma::mat& matrixv,
   // Calculate the reduced inverse from the eigen decomposition
   return eigenvec*arma::diagmat(1/eigenval)*eigenvec.t();
   
-}  // end calc_inv
+}  // end calc_invred
 
 
 
@@ -2079,7 +2185,7 @@ void calc_scale(arma::mat& timeser,
 
 
 ////////////////////////////////////////////////////////////
-// Functions for rolling aggregations
+// Aggregations
 ////////////////////////////////////////////////////////////
 
 
@@ -2751,7 +2857,7 @@ arma::mat roll_sumw(const arma::mat& timeser,
 
 
 ////////////////////////////////////////////////////////////
-// Functions for online aggregations of streaming data
+// Aggregations online of streaming data
 ////////////////////////////////////////////////////////////
 
 
@@ -2908,17 +3014,17 @@ arma::mat run_mean(const arma::mat& timeser,
   } else {
     // Loop over the columns and check for any NA or Inf values
     // Calculate means with NA or Inf values
-    double valuc = timeser(0, 0);
+    double retp = timeser(0, 0); // Initialize retp to the first value of the time series
     meanm.row(0) = timeser.row(0);
     for (arma::uword rn = 1; rn < nrows; rn++) {
       for (arma::uword cn = 0; cn < ncols; cn++) {
-        valuc = timeser(rn, cn);
-        if (std::isnan(meanm(rn-1, cn)) || std::isinf(meanm(rn-1, cn)) || std::isnan(valuc) || std::isinf(valuc)) {
+        retp = timeser(rn, cn); // Get the current value of the time series
+        if (std::isnan(meanm(rn-1, cn)) || std::isinf(meanm(rn-1, cn)) || std::isnan(retp) || std::isinf(retp)) {
           // Set the mean equal to the current value
-          meanm(rn, cn) = valuc;
+          meanm(rn, cn) = retp;
         } else {
           // Calculate the mean using the decay factor
-          meanm(rn, cn) = lambdaf*meanm(rn-1, cn) + lambda1*valuc;
+          meanm(rn, cn) = lambdaf*meanm(rn-1, cn) + lambda1*retp;
         }  // end if
       }  // end column for
     }  // end row for
@@ -3205,29 +3311,29 @@ arma::mat run_var(const arma::mat& timeser, double lambdaf) {
   // vars.row(0) = 0;
   if (!(timeser.has_nan() || timeser.has_inf())) {
     // No NA or Inf values
-    for (arma::uword it = 1; it < nrows; it++) {
+    for (arma::uword rn = 1; rn < nrows; rn++) {
       // Calculate the means using the decay factor
-      meanm.row(it) = lambdaf*meanm.row(it-1) + lambda1*timeser.row(it);
+      meanm.row(rn) = lambdaf*meanm.row(rn-1) + lambda1*timeser.row(rn);
       // Variance is the weighted sum of the past variance and the square of the data minus its mean
-      vars.row(it) = lambda2*vars.row(it-1) + lambda21*arma::square(timeser.row(it) - meanm.row(it));
+      vars.row(rn) = lambda2*vars.row(rn-1) + lambda21*arma::square(timeser.row(rn) - meanm.row(rn));
     }  // end for
   } else {
     // Loop over the columns because of the NA or Inf values.
     // Calculate variance with NA or Inf values
-    double valuc = timeser(0, 0);
+    double retp = timeser(0, 0);
     meanm.row(0) = timeser.row(0);
     for (arma::uword rn = 1; rn < nrows; rn++) {
       for (arma::uword cn = 0; cn < ncols; cn++) {
-        valuc = timeser(rn, cn);
-        if (std::isnan(meanm(rn-1, cn)) || std::isinf(meanm(rn-1, cn)) || std::isnan(valuc) || std::isinf(valuc)) {
+        retp = timeser(rn, cn);
+        if (std::isnan(meanm(rn-1, cn)) || std::isinf(meanm(rn-1, cn)) || std::isnan(retp) || std::isinf(retp)) {
           // Set the mean and variance equal to the current value
-          meanm(rn, cn) = valuc;
-          vars(rn, cn) = pow(valuc, 2);
+          meanm(rn, cn) = retp;
+          vars(rn, cn) = pow(retp, 2);
         } else {
           // Calculate the mean using the decay factor
-          meanm(rn, cn) = lambdaf*meanm(rn-1, cn) + lambda1*valuc;
+          meanm(rn, cn) = lambdaf*meanm(rn-1, cn) + lambda1*retp;
           // Variance is the weighted sum of the past variance and the square of the data minus its mean
-          vars(rn, cn) = lambda2*vars(rn-1, cn) + lambda21*pow(valuc - meanm(rn, cn), 2);
+          vars(rn, cn) = lambda2*vars(rn-1, cn) + lambda21*pow(retp - meanm(rn, cn), 2);
         }  // end if
       }  // end column for
     }  // end row for
@@ -4402,7 +4508,8 @@ arma::mat run_reg(const arma::mat& respv, // Response vector
   // cout << "Initializing the variables" << endl;
   covrespred = respv.row(0)*predm.row(0);
   covpred = arma::trans(predm.row(0))*predm.row(0);
-  betas.row(0) = covrespred*arma::inv(covpred);
+  // cout << "covpred: " << endl << covpred << endl;
+  betas.row(0) = covrespred*arma::pinv(covpred);
   resids.row(0) = respv.row(0) - arma::dot(betas.row(0), predm.row(0));
   residm.row(0) = resids.row(0);
   residv.row(0) = arma::square(resids.row(0));
@@ -4415,6 +4522,7 @@ arma::mat run_reg(const arma::mat& respv, // Response vector
     // cout << "Updating the covariances: " << it << endl;
     covrespred = lambdaf*covrespred + lambda1*respv.row(it)*predm.row(it);
     covpred = lambdaf*covpred + lambda1*arma::trans(predm.row(it))*predm.row(it);
+    // cout << "covpred: " << endl << covpred << endl;
     // cout << "Calculating betas: " << it << endl;
     // Update the betas and alphas
     betas.row(it) = covrespred*arma::inv(covpred);
@@ -4460,7 +4568,7 @@ arma::mat run_reg(const arma::mat& respv, // Response vector
 
 
 ////////////////////////////////////////////////////////////
-// Functions for statistics
+// Statistics
 ////////////////////////////////////////////////////////////
 
 
@@ -5932,7 +6040,7 @@ arma::mat calc_reg(const arma::mat& respv,  // Response vector
   }  // end least_squares
   case methodenum::regular: {
     // Calculate regularized regression coefficients
-    coeff = calc_inv(predm, dimax, singmin)*respv;
+    coeff = calc_invred(predm, dimax, singmin)*respv;
     break;
   }  // end regular
   case methodenum::quantile: {
@@ -5974,7 +6082,7 @@ arma::mat calc_reg(const arma::mat& respv,  // Response vector
 
 
 ////////////////////////////////////////////////////////////
-// Functions for rolling statistics
+// Rolling statistics
 ////////////////////////////////////////////////////////////
 
 
@@ -7616,7 +7724,7 @@ arma::mat roll_moment(const arma::mat& timeser,
 
 
 ////////////////////////////////////////////////////////////
-// Functions for simulation
+// Simulation
 ////////////////////////////////////////////////////////////
 
 
@@ -7733,7 +7841,9 @@ arma::mat sim_garch(double omegac,
   } else {
     // The innovations are historical returns
     arma::mat varm = arma::square(innov);
-    varm(0) = omegac/(1-alphac-betac);
+    // No need for warmup period because the first variance 
+    // value is calculated from the first return value.
+    // varm(0) = omegac/(1-alphac-betac);
     for (arma::uword it = 1; it < nrows; it++) {
       varm(it) = omegac + alphac*varm(it) + betac*varm(it-1);
     }  // end for
@@ -8151,7 +8261,7 @@ double lik_garch(double omegac,
 
 
 ////////////////////////////////////////////////////////////
-// Functions for backtests
+// Backtesting
 ////////////////////////////////////////////////////////////
 
 
@@ -8208,13 +8318,13 @@ double lik_garch(double omegac,
 //'   Where \eqn{\lambda_c} is the decay factor which multiplies the past mean
 //'   and covariance.
 //'   
-//'   It then calls the function \code{HighFreq::calc_inv()} to calculate the
+//'   It then calls the function \code{HighFreq::calc_invred()} to calculate the
 //'   \emph{reduced inverse} of the covariance matrix using its eigen
 //'   decomposition:
 //'   \deqn{
 //'     \strong{C}^{-1} = \strong{O}_{dimax} \, \Sigma^{-1}_{dimax} \, \strong{O}^T_{dimax}
 //'   }
-//'   See the function \code{HighFreq::calc_inv()} for details.
+//'   See the function \code{HighFreq::calc_invred()} for details.
 //'   
 //'   It then calculates the \emph{in-sample} weights of the maximum Sharpe
 //'   portfolio, by multiplying the inverse covariance matrix times the trailing
@@ -8285,7 +8395,7 @@ double lik_garch(double omegac,
 //' colnames(pnls) <- c("pnls", "VTI", "TLT", "DBC", "USO", "XLF", "XLK")
 //' pnls <- xts::xts(pnls, order.by=datev)
 //' # Plot dygraph of strategy
-//' wealthv <- cbind(retp$VTI, pnls$pnls*sd(retp$VTI)/sd(pnls$pnls))
+//' wealthv <- cbind(retp$VTI, pnls$pnls)
 //' colnames(wealthv) <- c("VTI", "Strategy")
 //' endd <- rutils::calc_endpoints(wealthv, interval="weeks")
 //' dygraphs::dygraph(cumsum(wealthv)[endd], main="Portfolio Optimization Strategy PnLs") %>%
@@ -8307,58 +8417,95 @@ double lik_garch(double omegac,
 //' @export
 // [[Rcpp::export]]
 arma::mat sim_portfoptim(const arma::mat& rets, // Asset returns
-                         const arma::uword& dimax, // Number of eigen vectors for dimension reduction
-                         const double& lambdaf, // Returns decay factor
-                         const double& lambdacov, // Covariance decay factor
-                         const double& lambdaw) { // Weight decay factor
+                         const arma::uword dimax, // Number of eigen vectors for dimension reduction
+                         const double lambdaf, // Returns decay factor
+                         const double lambdacov, // Covariance decay factor
+                         const double lambdaw, // Weight decay factor
+                         const double volt = 0.01) { // Volatility target for scaling the weights
   
   arma::uword nrows = rets.n_rows;
   arma::uword ncols = rets.n_cols;
   arma::rowvec retsc; // Row of scaled asset returns
-  arma::rowvec retm(ncols, fill::zeros); // Trailing average of asset returns
-  arma::rowvec varv; // Variance of asset returns
+  arma::rowvec retm(ncols, fill::zeros); // EMA of asset returns
+  arma::rowvec varv(ncols, fill::zeros); // Variance of asset returns
+  arma::rowvec weightv(ncols, fill::zeros); // Row of portfolio weights
+  double pnlm = 0; // EMA of strategy PnLs
+  double pnlvar = 0; // Variance of strategy PnLs
+  arma::colvec varportf(nrows); // Portfolio variance
   arma::mat invmat(ncols, ncols, fill::ones); // Inverse covariance matrix
-  arma::mat weightv(nrows, ncols, fill::zeros); // Portfolio weights
+  arma::mat weightm(nrows, ncols, fill::zeros); // Portfolio weights
   arma::colvec pnls(nrows, fill::zeros); // Strategy PnLs
   double weightd; // Sum of squared weights
   double lambda1 = 1-lambdaf;
+  double lambdac1 = 1-lambdacov;
   double lambdaw1 = 1-lambdaw;
   
-  // Initialize the covariance matrix with first row of data
-  arma::rowvec meanv = rets.row(0);
-  arma::mat covmat = arma::trans(meanv)*meanv;
-
+  // Initialize EMA of returns with first row of returns
+  arma::rowvec retmcov = rets.row(0); // EMA of returns for covariance
+  // Calculate the centered returns
+  arma::rowvec retc = retmcov;
+  // Initialize covariance matrix to unit diagonal matrix - doesn't perform well because takes too long to warm up
+  // arma::mat covmat = arma::eye(ncols, ncols);
+  // Initialize covariance matrix to outer product of the returns - initial matrix is singular but it warms up faster than the unit matrix
+  // arma::mat covmat = arma::trans(retmcov)*retmcov;
+  // Initialize covariance matrix to outer product of the returns plus unit diagonal matrix to prevent singularity
+  arma::mat covmat = arma::trans(retmcov)*retmcov + arma::dot(retmcov, retmcov)*arma::eye(ncols, ncols);
+  
   // Perform loop over the rows (time)
   for (arma::uword it = 1; it < nrows; it++) {
-    // Scale the returns by the trailing volatility
+    
     // retsc = rets.row(it);
+    // Calculate the variance of the returns using the diagonal of the covariance matrix
     varv = arma::trans(covmat.diag());
-    varv.replace(0, 1);
+    varv = varv + 1e-8; // Add small number to prevent division by zero
+    // varv.replace(0, 1);
+    // Scale the returns by the trailing volatility
     retsc = rets.row(it)/arma::sqrt(varv);
+    // weightm.row(it) = weightm.row(it)*volt/weightd;
     // Calculate the strategy PnLs - the products of the lagged weights times the asset returns
-    pnls(it) = arma::dot(retsc, weightv.row(it-1));
-    // Update the covariance matrix with new row of asset returns
-    // if (scalit) {
-    push_covar(retsc, covmat, meanv, lambdacov);
-    // } else {
-    //   push_covar(rets.row(it), covmat, meanv, lambdacov);
-    // }  // end if
-    // Calculate the trailing mean of asset returns
+    pnls(it) = arma::dot(retsc, weightm.row(it-1));
+    // pnlvar = lambdaf*pnlvar + lambda1*pow(pnls(it) - pnlm, 2);
+    // pnlm = lambdaf*pnlm + lambda1*pnls(it);
+    // Scale the weights using the volatility target
+    // weightd = std::sqrt(pnlvar);
+    // if (weightd == 0) weightd = 1;
+    // pnls(it) = pnls(it)*volt/weightd;
+    // Update the covariance means of the returns
+    retmcov = lambdacov*retmcov + lambdac1*retsc;
+    // Calculate the centered returns
+    retc = (retsc - retmcov);
+    // Update the covariance of the returns
+    covmat = lambdacov*covmat + lambdac1*arma::trans(retc)*retc;
+    // Calculate the trailing EMA of asset returns
     retm = lambdaf*retm + lambda1*rets.row(it);
-    // Calculate the weights using reduced inverse
-    invmat = calc_inv(covmat, dimax);
+    // Calculate the reduced inverse of the covariance matrix using its eigen decomposition
+    invmat = calc_invred(covmat, dimax);
     // Calculate the weights using recursive inverse
     // calc_invrec(covmat, invmat);
-    // weightv.row(it) = retm*invmat;
-    weightv.row(it) = lambdaw*weightv.row(it-1) + lambdaw1*retm*invmat;
+    // weightm.row(it) = retm*invmat;
+    // Calculate the EMA weights
+    weightv = retm*invmat;
+    // Scale the weights to the volatility target
+    // varportf(it) = arma::as_scalar(weightv*covmat*weightv.t());
+    // weightv = weightv*volt/std::sqrt(varportf(it));
     // Scale the weights so their sum of squares is equal to one
-    weightd = std::sqrt(arma::sum(arma::square(weightv.row(it))));
-    if (weightd == 0) weightd = 1;
-    weightv.row(it) = weightv.row(it)/weightd;
+    // weightd = std::sqrt(arma::sum(arma::square(weightv)));
+    // weightv = weightv/weightd;
+    // cout << "it: " << it << endl << "weightv: " << endl << weightv << endl;
+    // Calculate the portfolio variance using the weights
+    weightm.row(it) = lambdaw*weightm.row(it-1) + lambdaw1*weightv;
+    // Scale the weights so their sum of squares is equal to one
+    weightd = std::sqrt(arma::sum(arma::square(weightm.row(it))));
+    // if (weightd == 0) weightd = 1;
+    weightm.row(it) = weightm.row(it)/weightd;
+    // Scale the weights to the volatility target
+    // varportf(it) = arma::as_scalar(weightm.row(it)*covmat*weightm.row(it).t());
+    // weightm.row(it) = weightm.row(it)*volt/std::sqrt(varportf(it));
   }  // end for
   
   // Return the strategy PnLs and the portfolio weights
-  return arma::join_rows(pnls, weightv);
+  // return arma::join_rows(pnls, weightm, varportf);
+  return arma::join_rows(pnls, weightm);
   
 }  // end sim_portfoptim
 
@@ -8425,7 +8572,7 @@ arma::mat sim_portfoptim(const arma::mat& rets, // Asset returns
 //'     \strong{w} = \frac{\bar{r}}{\sigma^2}
 //'   }
 //'
-//'   \code{calc_weights()} calls the function \code{calc_inv()} to calculate
+//'   \code{calc_weights()} calls the function \code{calc_invred()} to calculate
 //'   the \emph{reduced inverse} of the \emph{covariance matrix} of
 //'   \code{returns}. It performs regularization by selecting only the largest
 //'   eigenvalues equal in number to \code{dimax}.
@@ -8548,7 +8695,7 @@ arma::vec calc_weights(const arma::mat& returns, // Asset returns
     // Shrink colmeans to the mean of returns
     colmeans = ((1-alphac)*colmeans + alphac*arma::mean(colmeans));
     // Calculate the weights using reduced inverse
-    weightv = calc_inv(covmat, dimax, singmin)*colmeans;
+    weightv = calc_invred(covmat, dimax, singmin)*colmeans;
     break;
   }  // end maxsharpe
   case methodenum::maxsharpemed: {
@@ -8557,13 +8704,13 @@ arma::vec calc_weights(const arma::mat& returns, // Asset returns
     // Shrink colmeans to the median of returns
     colmeans = ((1-alphac)*colmeans + alphac*arma::median(colmeans));
     // Calculate the weights using reduced inverse
-    weightv = calc_inv(covmat, dimax, singmin)*colmeans;
+    weightv = calc_invred(covmat, dimax, singmin)*colmeans;
     break;
   }  // end maxsharpemed
   case methodenum::minvarlin: {
     // Minimum variance weights under linear constraint
     // Multiply reduced inverse times unit vector
-    weightv = calc_inv(covmat, dimax, singmin)*arma::ones(ncols);
+    weightv = calc_invred(covmat, dimax, singmin)*arma::ones(ncols);
     break;
   }  // end minvarlin
   case methodenum::minvarquad: {

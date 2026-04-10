@@ -1048,6 +1048,99 @@ calc_eigenp <- function(matrixv, neigen) {
     .Call(`_HighFreq_calc_eigenp`, matrixv, neigen)
 }
 
+#' Calculate the inverse of a square positive definite \emph{matrix} using
+#' \code{RcppArmadillo}.
+#' 
+#' @param \code{matrixv} A square positive definite \emph{matrix}.
+#'
+#' @return A \emph{matrix} equal to the inverse of \code{matrixv}.
+#'
+#' @details
+#'   The function \code{calc_inv()} calculates the inverse of the matrix
+#'   \code{matrixv} using the \code{RcppArmadillo} function \code{arma::inv()}.
+#'   
+#'   The product of a matrix \eqn{\strong{C}} times its inverse
+#'   \eqn{\strong{C}^{-1}} is equal to the identity matrix \eqn{\strong{I}}:
+#'   \deqn{
+#'     \strong{C} \, \strong{C}^{-1} = \strong{I}
+#'   }
+#'   
+#'   The matrix \code{matrixv} must be square and positive definite (non-singular).
+#'   For singular or near-singular matrices, consider using \code{calc_ginv()}
+#'   which computes the Moore-Penrose pseudo-inverse.
+#'   But \code{calc_ginv()} can be several times slower than \code{calc_inv()}
+#'   for large matrices.
+#'   For symmetric positive definite matrices, consider using 
+#'   \code{calc_inv_sympd()} which is slightly faster.
+#'   
+#' @examples
+#' \dontrun{
+#' # Create a random positive definite matrix
+#' matv <- matrix(rnorm(2500), nc=50)
+#' matv <- t(matv) %*% matv
+#' # Add small identity matrix to ensure positive definiteness
+#' matv <- matv + 1e-2*diag(50)
+#' # Calculate matrix inverse using RcppArmadillo
+#' invmat <- HighFreq::calc_inv(matv)
+#' # Calculate matrix inverse in R
+#' invr <- solve(matv)
+#' all.equal(invmat, invr, check.attributes=FALSE)
+#' }  # end dontrun
+#' 
+#' @export
+calc_inv <- function(matrixv) {
+    .Call(`_HighFreq_calc_inv`, matrixv)
+}
+
+#' Calculate the generalized inverse (Moore-Penrose pseudo-inverse) of a 
+#' \emph{matrix} using \code{RcppArmadillo}.
+#' 
+#' @param \code{matrixv} A \emph{matrix} (can be rectangular or singular).
+#'
+#' @return A \emph{matrix} equal to the pseudo-inverse of \code{matrixv}.
+#'
+#' @details
+#'   The function \code{calc_ginv()} calculates the generalized inverse
+#'   (Moore-Penrose pseudo-inverse) of the matrix \code{matrixv} using the
+#'   \code{RcppArmadillo} function \code{arma::pinv()}.
+#'   
+#'   The generalized inverse \eqn{\strong{C}^{+}} of a matrix \eqn{\strong{C}} 
+#'   satisfies the Moore-Penrose condition:
+#'   \deqn{
+#'     \strong{C} \, \strong{C}^{+} \, \strong{C} = \strong{C}
+#'   }
+#'   Which is a generalization of the standard inverse condition: 
+#'   \deqn{
+#'     \strong{C} \, \strong{C}^{-1} = \strong{I}
+#'   }
+#'   
+#'   Unlike the standard inverse, the generalized inverse exists for any matrix,
+#'   including rectangular and singular matrices. For non-singular square 
+#'   matrices, the generalized inverse equals the standard inverse.
+#'   
+#'   The generalized inverse is computed using singular value decomposition (SVD),
+#'   which makes it more robust but several times slower than \code{calc_inv()}.
+#'   For large non-singular matrices, \code{calc_inv()} is preferred for speed.
+#'   
+#' @examples
+#' \dontrun{
+#' # Create a singular matrix (rank deficient)
+#' matv <- matrix(rnorm(25), nc=5)
+#' matv[, 5] <- matv[, 1]  # Make it singular
+#' # Calculate generalized inverse using RcppArmadillo
+#' invmat <- HighFreq::calc_ginv(matv)
+#' # Calculate generalized inverse using MASS package in R
+#' invr <- MASS::ginv(matv)
+#' all.equal(invmat, invr, check.attributes=FALSE)
+#' # Verify Moore-Penrose condition
+#' all.equal(matv %*% invmat %*% matv, matv, check.attributes=FALSE)
+#' }  # end dontrun
+#' 
+#' @export
+calc_ginv <- function(matrixv) {
+    .Call(`_HighFreq_calc_ginv`, matrixv)
+}
+
 #' Calculate the \emph{reduced inverse} of a symmetric \emph{matrix} of
 #' data using eigen decomposition.
 #' 
@@ -1066,10 +1159,10 @@ calc_eigenp <- function(matrixv, neigen) {
 #'   matrix \code{matrixv}.
 #'
 #' @details
-#'   The function \code{calc_inv()} calculates the \emph{reduced inverse}
+#'   The function \code{calc_invred()} calculates the \emph{reduced inverse}
 #'   of the matrix \code{matrixv} using eigen decomposition.
 #'   
-#'   The function \code{calc_inv()} first performs eigen decomposition of the
+#'   The function \code{calc_invred()} first performs eigen decomposition of the
 #'   matrix \code{matrixv}.
 #'   The eigen decomposition of a matrix \eqn{\strong{C}} is defined as the
 #'   factorization:
@@ -1092,10 +1185,10 @@ calc_eigenp <- function(matrixv, neigen) {
 #'   Where \eqn{\strong{O}_{dimax}} is the matrix of \emph{eigen vectors} 
 #'   that correspond to the largest \emph{eigen values} \eqn{\Sigma_{dimax}}. 
 #'   
-#'   The function \code{calc_inv()} applies regularization to the matrix
+#'   The function \code{calc_invred()} applies regularization to the matrix
 #'   inverse using the arguments \code{dimax} and \code{singmin}.
 #'   
-#'   The function \code{calc_inv()} applies regularization by discarding the
+#'   The function \code{calc_invred()} applies regularization by discarding the
 #'   smallest \emph{eigen values} \eqn{\Sigma_i} that are less than the
 #'   threshold level \code{singmin} times the sum of all the \emph{eigen
 #'   values}: \deqn{\Sigma_i < eigen\_thresh \cdot (\sum{\Sigma_i})}
@@ -1120,12 +1213,12 @@ calc_eigenp <- function(matrixv, neigen) {
 #' # Calculate covariance matrix
 #' covmat <- cov(retp)
 #' # Calculate matrix inverse using RcppArmadillo
-#' invmat <- HighFreq::calc_inv(covmat)
+#' invmat <- HighFreq::calc_invred(covmat)
 #' # Calculate matrix inverse in R
 #' invr <- solve(covmat)
 #' all.equal(invmat, invr, check.attributes=FALSE)
 #' # Calculate the reduced inverse using RcppArmadillo
-#' invmat <- HighFreq::calc_inv(covmat, dimax=3)
+#' invmat <- HighFreq::calc_invred(covmat, dimax=3)
 #' # Calculate the reduced inverse using eigen decomposition in R
 #' eigend <- eigen(covmat)
 #' dimax <- 1:3
@@ -1135,8 +1228,8 @@ calc_eigenp <- function(matrixv, neigen) {
 #' }  # end dontrun
 #' 
 #' @examples
-calc_inv <- function(matrixv, dimax = 0L, singmin = 0.0) {
-    .Call(`_HighFreq_calc_inv`, matrixv, dimax, singmin)
+calc_invred <- function(matrixv, dimax = 0L, singmin = 0.0) {
+    .Call(`_HighFreq_calc_invred`, matrixv, dimax, singmin)
 }
 
 #' Calculate the \emph{reduced inverse} of a \emph{matrix} of data using
@@ -5501,13 +5594,13 @@ lik_garch <- function(omegac, alphac, betac, returns, minval = 0.000001) {
 #'   Where \eqn{\lambda_c} is the decay factor which multiplies the past mean
 #'   and covariance.
 #'   
-#'   It then calls the function \code{HighFreq::calc_inv()} to calculate the
+#'   It then calls the function \code{HighFreq::calc_invred()} to calculate the
 #'   \emph{reduced inverse} of the covariance matrix using its eigen
 #'   decomposition:
 #'   \deqn{
 #'     \strong{C}^{-1} = \strong{O}_{dimax} \, \Sigma^{-1}_{dimax} \, \strong{O}^T_{dimax}
 #'   }
-#'   See the function \code{HighFreq::calc_inv()} for details.
+#'   See the function \code{HighFreq::calc_invred()} for details.
 #'   
 #'   It then calculates the \emph{in-sample} weights of the maximum Sharpe
 #'   portfolio, by multiplying the inverse covariance matrix times the trailing
@@ -5578,7 +5671,7 @@ lik_garch <- function(omegac, alphac, betac, returns, minval = 0.000001) {
 #' colnames(pnls) <- c("pnls", "VTI", "TLT", "DBC", "USO", "XLF", "XLK")
 #' pnls <- xts::xts(pnls, order.by=datev)
 #' # Plot dygraph of strategy
-#' wealthv <- cbind(retp$VTI, pnls$pnls*sd(retp$VTI)/sd(pnls$pnls))
+#' wealthv <- cbind(retp$VTI, pnls$pnls)
 #' colnames(wealthv) <- c("VTI", "Strategy")
 #' endd <- rutils::calc_endpoints(wealthv, interval="weeks")
 #' dygraphs::dygraph(cumsum(wealthv)[endd], main="Portfolio Optimization Strategy PnLs") %>%
@@ -5598,8 +5691,8 @@ lik_garch <- function(omegac, alphac, betac, returns, minval = 0.000001) {
 #' }  # end dontrun
 #' 
 #' @export
-sim_portfoptim <- function(rets, dimax, lambdaf, lambdacov, lambdaw) {
-    .Call(`_HighFreq_sim_portfoptim`, rets, dimax, lambdaf, lambdacov, lambdaw)
+sim_portfoptim <- function(rets, dimax, lambdaf, lambdacov, lambdaw, volt = 0.01) {
+    .Call(`_HighFreq_sim_portfoptim`, rets, dimax, lambdaf, lambdacov, lambdaw, volt)
 }
 
 #' Calculate the optimal portfolio weights using a variety of different
@@ -5661,7 +5754,7 @@ sim_portfoptim <- function(rets, dimax, lambdaf, lambdacov, lambdaw) {
 #'     \strong{w} = \frac{\bar{r}}{\sigma^2}
 #'   }
 #'
-#'   \code{calc_weights()} calls the function \code{calc_inv()} to calculate
+#'   \code{calc_weights()} calls the function \code{calc_invred()} to calculate
 #'   the \emph{reduced inverse} of the \emph{covariance matrix} of
 #'   \code{returns}. It performs regularization by selecting only the largest
 #'   eigenvalues equal in number to \code{dimax}.
